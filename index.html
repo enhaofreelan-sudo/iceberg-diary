@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>冰山日记 - 心理觉察之旅</title>
+    <meta name="description" content="基于萨提亚冰山理论的心理觉察工具，逐层探索行为、感受、观点、期待、渴望与自我，生成专属冰山日记图片。">
+    <meta name="keywords" content="冰山日记,萨提亚,冰山理论,心理觉察,情绪管理,自我探索">
+    <meta property="og:title" content="冰山日记 - 心理觉察之旅">
+    <meta property="og:description" content="探索你的内心世界，看见真实的自己。基于萨提亚冰山理论的心理觉察工具。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="cover.png">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #E8A4B8;
+            --primary-dark: #D4899E;
+            --secondary: #A8D5E5;
+            --secondary-dark: #7BBDD4;
+            --accent: #F5D5A0;
+            --accent-dark: #E8C078;
+            --bg-light: #FFF5F7;
+            --bg-warm: #FFFAF5;
+            --text-dark: #5D4E60;
+            --text-light: #8B7B8E;
+            --white: #FFFFFF;
+            --shadow: rgba(93, 78, 96, 0.1);
+            --shadow-strong: rgba(93, 78, 96, 0.15);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-warm) 50%, #F5F0FF 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 100px;
+        }
+
+        /* 顶部固定标题区 */
+        .header-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: linear-gradient(180deg, #FFF5F7 0%, rgba(255,245,247,0.95) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(232,164,184,0.2);
+        }
+
+        .header-content {
+            max-width: 430px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(232, 164, 184, 0.3);
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .header-date {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            padding-top: 70px;
+        }
+
+        /* 欢迎引导区 */
+        .intro-section {
+            padding: 24px 20px;
+            text-align: center;
+        }
+
+        .intro-text {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        /* 封面图片区 */
+        .cover-section {
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .cover-image {
+            width: 100%;
+            max-width: 380px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(93, 78, 96, 0.15);
+        }
+
+        /* 个人信息输入区 */
+        .info-section {
+            padding: 0 20px 20px;
+        }
+
+        .info-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+
+        .info-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-title-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .info-field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .info-label .required {
+            color: var(--primary-dark);
+        }
+
+        .info-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #E8E0E8;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text-dark);
+            background: var(--white);
+            transition: all 0.2s ease;
+        }
+
+        .info-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(232, 164, 184, 0.1);
+        }
+
+        .info-input::placeholder {
+            color: #C4B8C4;
+        }
+
+        @media (max-width: 360px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 冰山层次填写区 */
+        .layers-section {
+            padding: 0 16px;
+        }
+
+        .layer-card {
+            background: var(--white);
+            border-radius: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .layer-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .layer-header {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .layer-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .layer-icon.🌊 { background: linear-gradient(135deg, #89CFF0 0%, #5BA3D0 100%); }
+        .layer-icon.🛡️ { background: linear-gradient(135deg, #B8E6CF 0%, #8CD4A8 100%); }
+        .layer-icon.💭 { background: linear-gradient(135deg, #F5C6AA 0%, #E8A878 100%); }
+        .layer-icon.🔄 { background: linear-gradient(135deg, #D4B8E8 0%, #B894D4 100%); }
+        .layer-icon.💡 { background: linear-gradient(135deg, #FFE066 0%, #FFD633 100%); }
+        .layer-icon.⭐ { background: linear-gradient(135deg, #FFB3BA 0%, #FF8A95 100%); }
+        .layer-icon.💖 { background: linear-gradient(135deg, #FF9999 0%, #FF6B6B 100%); }
+        .layer-icon.🦋 { background: linear-gradient(135deg, #C9B1FF 0%, #9D7BE5 100%); }
+
+        .layer-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .layer-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .layer-subtitle {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+
+        .layer-expand-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .layer-card.expanded .layer-expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* 折叠内容 */
+        .layer-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+        }
+
+        .layer-card.expanded .layer-content {
+            max-height: 2000px;
+            padding: 0 20px 20px;
+        }
+
+        .layer-prompt {
+            background: linear-gradient(135deg, #FFF8FA 0%, #FFFCF5 100%);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .prompt-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--primary-dark);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .prompt-text {
+            font-size: 13px;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .hint-text {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+
+        .hint-item {
+            display: inline-block;
+            margin-right: 8px;
+            margin-top: 4px;
+        }
+
+        /* 示例区域 - 列表样式 */
+        .example-box {
+            background: #FAFAFA;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+
+        .example-label {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .example-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .example-list li {
+            position: relative;
+            font-size: 13px;
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding-left: 18px;
+            margin-bottom: 6px;
+        }
+
+        .example-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .example-list li::before {
+            content: '•';
+            position: absolute;
+            left: 6px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .example-text {
+            font-style: italic;
+        }
+
+        /* 应对方式提示卡片 */
+        .coping-hints {
+            background: linear-gradient(135deg, #F0FFF4 0%, #F0FFF0 100%);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+
+        .coping-hint-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .coping-hint-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .coping-hint-name {
+            font-weight: 500;
+            color: #5D9E6B;
+            min-width: 50px;
+        }
+
+        .coping-hint-desc {
+            color: var(--text-dark);
+            line-height: 1.4;
+        }
+
+        /* 情绪词汇标签 */
+        .emotion-tags-section {
+            margin-bottom: 14px;
+        }
+
+        .emotion-category {
+            margin-bottom: 10px;
+        }
+
+        .emotion-category:last-child {
+            margin-bottom: 0;
+        }
+
+        .emotion-category-label {
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .emotion-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .emotion-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1.5px solid transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .emotion-tag:active {
+            transform: scale(0.95);
+        }
+
+        .emotion-tag.selected {
+            border-color: currentColor;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .emotion-tag.selected::after {
+            content: ' ✓';
+            font-size: 11px;
+        }
+
+        /* 情绪分类颜色 */
+        .emotion-fear {
+            background: #EDE7F6;
+            color: #7E57C2;
+        }
+        .emotion-fear.selected {
+            background: #D1C4E9;
+        }
+
+        .emotion-sad {
+            background: #E3F2FD;
+            color: #42A5F5;
+        }
+        .emotion-sad.selected {
+            background: #BBDEFB;
+        }
+
+        .emotion-angry {
+            background: #FFEBEE;
+            color: #EF5350;
+        }
+        .emotion-angry.selected {
+            background: #FFCDD2;
+        }
+
+        .emotion-disgust {
+            background: #E8F5E9;
+            color: #66BB6A;
+        }
+        .emotion-disgust.selected {
+            background: #C8E6C9;
+        }
+
+        .emotion-shame {
+            background: #FCE4EC;
+            color: #EC407A;
+        }
+        .emotion-shame.selected {
+            background: #F8BBD9;
+        }
+
+        .emotion-surprise {
+            background: #FFF8E1;
+            color: #FFA726;
+        }
+        .emotion-surprise.selected {
+            background: #FFE0B2;
+        }
+
+        .emotion-happy {
+            background: #FFF3E0;
+            color: #FF7043;
+        }
+        .emotion-happy.selected {
+            background: #FFE0B2;
+        }
+
+        .emotion-complex {
+            background: #ECEFF1;
+            color: #607D8B;
+        }
+        .emotion-complex.selected {
+            background: #CFD8DC;
+        }
+
+        /* 渴望词汇区 */
+        .desire-words-section {
+            margin-bottom: 16px;
+        }
+
+        .desire-words-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .desire-category {
+            margin-bottom: 14px;
+        }
+
+        .desire-category:last-child {
+            margin-bottom: 0;
+        }
+
+        .desire-category-title {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .desire-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .desire-tag {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        /* 依附需求样式（积极） */
+        .desire-category-needs .desire-category-title {
+            color: #E8A4B8;
+        }
+
+        .desire-category-needs .desire-tag {
+            background: linear-gradient(135deg, rgba(232, 164, 184, 0.15) 0%, rgba(245, 213, 160, 0.15) 100%);
+            border: 1px solid rgba(232, 164, 184, 0.3);
+            color: var(--primary-dark);
+        }
+
+        /* 依附恐惧样式（消极） */
+        .desire-category-fears .desire-category-title {
+            color: #8B7B8E;
+        }
+
+        .desire-category-fears .desire-tag {
+            background: rgba(139, 123, 142, 0.1);
+            border: 1px solid rgba(139, 123, 142, 0.25);
+            color: var(--text-light);
+        }
+
+        /* 输入区 */
+        .input-area {
+            position: relative;
+        }
+
+        .textarea-field {
+            width: 100%;
+            min-height: 80px;
+            padding: 14px 16px;
+            border: 2px solid #F0E8EC;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            background: var(--white);
+            resize: none;
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        .textarea-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(232, 164, 184, 0.1);
+        }
+
+        .textarea-field::placeholder {
+            color: #C4B8C4;
+        }
+
+        .word-count {
+            text-align: right;
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+
+        /* 底部固定操作区 */
+        .footer-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: linear-gradient(0deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px 20px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            border-top: 1px solid rgba(232,164,184,0.2);
+            box-shadow: 0 -4px 20px rgba(93, 78, 96, 0.08);
+        }
+
+        .footer-content {
+            max-width: 430px;
+            margin: 0 auto;
+        }
+
+        .btn-generate {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(232, 164, 184, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-generate:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 16px rgba(232, 164, 184, 0.4);
+        }
+
+        .btn-generate svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* 结果页 */
+        .result-page {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .result-page.active {
+            display: block;
+        }
+
+        .result-header {
+            text-align: center;
+            padding: 60px 0 30px;
+        }
+
+        .result-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 30px rgba(245, 213, 160, 0.4);
+        }
+
+        .result-icon svg {
+            width: 36px;
+            height: 36px;
+            fill: white;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .preview-container {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 8px 40px var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .preview-canvas {
+            width: 100%;
+            border-radius: 16px;
+            display: block;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            flex: 1;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(232, 164, 184, 0.3);
+            font-family: inherit;
+        }
+
+        .btn-share {
+            flex: 1;
+            padding: 16px;
+            background: var(--white);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--primary-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .btn-restart {
+            display: block;
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: inherit;
+        }
+
+        /* Toast提示 */
+        .toast {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-dark);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 装饰元素 */
+        .deco-circle {
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        .deco-circle.c1 {
+            width: 200px;
+            height: 200px;
+            background: var(--primary);
+            top: -100px;
+            right: -50px;
+        }
+
+        .deco-circle.c2 {
+            width: 150px;
+            height: 150px;
+            background: var(--secondary);
+            bottom: 100px;
+            left: -80px;
+        }
+
+        /* 进度指示 */
+        .progress-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            position: sticky;
+            top: 64px;
+            z-index: 50;
+        }
+
+        .progress-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #E8E0E8;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.filled {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+
+        /* 响应式 */
+        @media (max-width: 360px) {
+            .header-title { font-size: 16px; }
+            .layer-title { font-size: 15px; }
+            .layer-icon { width: 42px; height: 42px; font-size: 20px; }
+            .emotion-tag { padding: 5px 10px; font-size: 12px; }
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(232, 164, 184, 0.3);
+            border-radius: 2px;
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .layer-card {
+            animation: fadeInUp 0.5s ease backwards;
+        }
+
+        .layer-card:nth-child(1) { animation-delay: 0.05s; }
+        .layer-card:nth-child(2) { animation-delay: 0.1s; }
+        .layer-card:nth-child(3) { animation-delay: 0.15s; }
+        .layer-card:nth-child(4) { animation-delay: 0.2s; }
+        .layer-card:nth-child(5) { animation-delay: 0.25s; }
+        .layer-card:nth-child(6) { animation-delay: 0.3s; }
+        .layer-card:nth-child(7) { animation-delay: 0.35s; }
+        .layer-card:nth-child(8) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="deco-circle c1"></div>
+    <div class="deco-circle c2"></div>
+
+    <!-- 填写页面 -->
+    <div class="container" id="form-container">
+        <!-- 顶部固定标题区 -->
+        <header class="header-fixed">
+            <div class="header-content">
+                <div class="header-icon">❄️</div>
+                <div class="header-text">
+                    <div class="header-title">我的冰山日记</div>
+                    <div class="header-date" id="header-date"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 封面图片 -->
+            <section class="cover-section">
+                <picture>
+                    <source srcset="cover.webp" type="image/webp">
+                    <img src="cover.png" alt="如何写冰山" class="cover-image" loading="lazy">
+                </picture>
+            </section>
+
+            <!-- 欢迎引导 -->
+            <section class="intro-section">
+                <p class="intro-text">探索你的内心世界，看见真实的自己<br>向下滚动，逐层填写你的冰山</p>
+            </section>
+
+            <!-- 个人信息输入区 -->
+            <section class="info-section">
+                <div class="info-card">
+                    <div class="info-title">
+                        <div class="info-title-icon">📝</div>
+                        基本信息
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <label class="info-label">家长姓名 <span class="required">*</span></label>
+                            <input type="text" class="info-input" id="parent-name" placeholder="请输入家长姓名">
+                        </div>
+                        <div class="info-field">
+                            <label class="info-label">学生姓名 <span class="required">*</span></label>
+                            <input type="text" class="info-input" id="student-name" placeholder="请输入学生姓名">
+                        </div>
+                        <div class="info-field">
+                            <label class="info-label">心理老师</label>
+                            <input type="text" class="info-input" id="psychology-teacher" placeholder="选填">
+                        </div>
+                        <div class="info-field">
+                            <label class="info-label">陪伴老师</label>
+                            <input type="text" class="info-input" id="companion-teacher" placeholder="选填">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 进度指示器 -->
+            <div class="progress-indicator" id="progress-indicator"></div>
+
+            <!-- 冰山层次填写区 -->
+            <section class="layers-section" id="layers-section">
+                <!-- 动态生成 -->
+            </section>
+        </main>
+    </div>
+
+    <!-- 底部固定操作区 -->
+    <footer class="footer-fixed">
+        <div class="footer-content">
+            <button class="btn-generate" onclick="generateImage()">
+                <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                生成冰山日记
+            </button>
+        </div>
+    </footer>
+
+    <!-- 结果页面 -->
+    <div class="result-page" id="result-page">
+        <div class="result-header">
+            <div class="result-icon">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <h2 class="result-title">你的冰山日记</h2>
+            <p class="result-desc">一张图读懂你的内心世界</p>
+        </div>
+
+        <div class="preview-container">
+            <canvas id="preview-canvas" class="preview-canvas"></canvas>
+            <div class="preview-actions">
+                <button class="btn-save" onclick="saveImage()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    保存图片
+                </button>
+                <button class="btn-share" onclick="shareImage()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                    分享
+                </button>
+            </div>
+        </div>
+
+        <button class="btn-restart" onclick="restartJourney()">
+            重新填写冰山日记
+        </button>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 冰山层次数据 - 增强版
+        const layers = [
+            {
+                id: 'behavior',
+                icon: '🌊',
+                title: '行为',
+                subtitle: '水面之上的可见部分',
+                prompt: '发生了什么？你做了什么？说了什么？当时的情境是什么？',
+                placeholder: '描述具体发生了什么……',
+                examples: [
+                    '今天孩子不写作业，我吼了他，还把他的玩具扔了',
+                    '老公回家晚了没说一声，我对他冷嘲热讽，不理他',
+                    '同事当众批评我的方案，我当场反驳，说他的想法也不怎么样'
+                ]
+            },
+            {
+                id: 'coping',
+                icon: '🛡️',
+                title: '应对方式',
+                subtitle: '你如何处理这个情境',
+                prompt: '你当时用了什么方式应对？是指责、讨好、超理智、打岔，还是表里一致？',
+                placeholder: '描述你是如何应对的……',
+                examples: [
+                    '我指责孩子，说他不懂事、不听话，把问题都怪在他身上',
+                    '我用冷暴力，不理他，但他跟我说话我就假装没听见',
+                    '我超理智地讲道理，列出一堆他应该如何如何'
+                ],
+                copingHints: [
+                    { name: '指责', desc: '怪别人，"都是你的错"' },
+                    { name: '讨好', desc: '委屈自己，"都是我不好"' },
+                    { name: '超理智', desc: '讲道理、说教，忽略感受' },
+                    { name: '打岔', desc: '转移话题、逃避问题' },
+                    { name: '表里一致', desc: '真实表达，兼顾自己和他人' }
+                ]
+            },
+            {
+                id: 'feelings',
+                icon: '💭',
+                title: '感受',
+                subtitle: '你内心的情绪体验',
+                prompt: '当时你有什么感受？点击上方标签或直接输入',
+                placeholder: '选择或输入你的感受……',
+                examples: [
+                    '愤怒、生气、着急',
+                    '委屈、伤心、失落',
+                    '焦虑、担心、害怕'
+                ],
+                emotionTags: {
+                    fear: { label: '😰 害怕', words: ['不舒服', '不安全', '难受', '不安', '忐忑', '慌张', '担心', '担忧', '忧虑', '焦虑', '害怕', '惧怕', '畏惧', '惊惶', '惊恐', '恐惧', '恐怖'] },
+                    sad: { label: '😢 伤心', words: ['酸酸的', '沮丧', '挫败', '失望', '失落', '难过', '伤心', '悲伤', '哀伤', '绝望', '悲痛', '悲凉', '心痛', '心碎', '沉痛'] },
+                    angry: { label: '😠 生气', words: ['不爽', '不开心', '不悦', '恼火', '生气', '愤怒', '震怒', '暴怒'] },
+                    disgust: { label: '😒 厌恶', words: ['反感', '讨厌', '恶心', '厌烦', '厌恶', '嫌恶', '轻蔑', '痛恨', '恨恶'] },
+                    shame: { label: '😳 羞愧', words: ['不好意思', '害羞', '尴尬', '难看', '没面子', '丢脸', '惭愧', '懊悔', '后悔'] },
+                    surprise: { label: '😲 惊讶', words: ['吓一跳', '吃惊', '诧异', '惊讶', '震惊', '惊吓', '惊奇', '惊喜'] },
+                    happy: { label: '😊 快乐', words: ['开心', '高兴', '快乐', '愉快', '愉悦', '雀跃', '欢畅', '喜乐', '幸福'] },
+                    complex: { label: '🔮 复合情绪', words: ['委屈', '后悔', '羞愤', '嫉妒', '孤独', '无助', '矛盾', '无奈'] }
+                }
+            },
+            {
+                id: 'feelings-about-feelings',
+                icon: '🔄',
+                title: '感受的感受',
+                subtitle: '对自己情绪的二次反应',
+                prompt: '你对自己刚才的感受有什么感受？你接纳自己的情绪吗？还是对自己的情绪感到不安？',
+                placeholder: '例如：我对自己的愤怒感到……',
+                examples: [
+                    '我对自己发脾气感到后悔和自责，觉得自己不应该这样',
+                    '我对自己的害怕感到羞耻，觉得自己不够坚强',
+                    '我对自己的难过感到接纳，允许自己有这样的情绪'
+                ]
+            },
+            {
+                id: 'beliefs',
+                icon: '💡',
+                title: '观点',
+                subtitle: '你的想法和信念',
+                prompt: '你当时是怎么想的？有什么信念？觉得"应该"怎样？',
+                placeholder: '例如：我觉得……应该……',
+                examples: [
+                    '孩子应该听话，写作业是天经地义的事，不写就是有问题',
+                    '家人之间应该互相尊重，他不尊重我，我就以牙还牙',
+                    '我觉得我的付出没有被看见，他们都不懂得感恩'
+                ]
+            },
+            {
+                id: 'expectations',
+                icon: '⭐',
+                title: '期待',
+                subtitle: '你期望什么',
+                prompt: '你期待什么？对自己、对他人有什么期待？',
+                placeholder: '例如：我期待……',
+                examples: [
+                    '我期待自己怎么做？',
+                    '我期待对方（或环境）怎么做？',
+                    '我觉得对方期待我怎么做？'
+                ]
+            },
+            {
+                id: 'desires',
+                icon: '💖',
+                title: '渴望',
+                subtitle: '内心深处的渴望',
+                prompt: '你内心真正渴望的是什么？最深层的需求是什么？',
+                placeholder: '例如：我渴望……',
+                examples: [
+                    '被理解、被看见、被尊重，希望自己的付出有价值',
+                    '被爱、被关心、被重视，希望家人能懂得我的心',
+                    '安全感、归属感、价值感，希望自己是被需要的'
+                ],
+                desireCategories: {
+                    needs: {
+                        label: '💕 依附需求',
+                        words: [
+                            '被爱', '被接纳', '被喜欢', '被欢迎', '被尊重', '被信任', '被呵护', '被善待', '被宠爱',
+                            '被关注', '被关心', '被珍惜', '被疼惜', '被理解', '被肯定', '被认可', '被欣赏',
+                            '被安慰', '被给予安全感', '被给予承诺并落实', '被感谢', '被宽恕', '被在意', '被在乎',
+                            '被看重', '有能力', '有掌控力'
+                        ]
+                    },
+                    fears: {
+                        label: '🌧️ 依附恐惧',
+                        words: [
+                            '被嫌弃', '被厌恶', '被讨厌', '被藐视', '被轻视', '被羞辱', '被攻击',
+                            '被误会', '被冤枉', '被欺骗', '被出卖', '被背叛',
+                            '被排斥', '被排挤', '被拒绝', '被虐待', '被恶待', '被陷害',
+                            '被抛弃', '被遗忘', '被隔离', '被忽视', '被漠视',
+                            '被拒绝忽略', '被冷漠对待', '被误解', '被否定', '被不满意', '被指责', '被批评',
+                            '被威胁', '被恐吓', '被乱开空头支票', '被忽悠', '被玩弄',
+                            '被利用', '被记恨', '被忘恩负义', '被忽略', '被漠视',
+                            '无力抗争', '被控制', '被勉强', '失控', '危险'
+                        ]
+                    }
+                }
+            },
+            {
+                id: 'self',
+                icon: '🦋',
+                title: '自我',
+                subtitle: '你看到了怎样的自己',
+                prompt: '这件事让你看到了怎样的自己？你如何定义自己？',
+                placeholder: '例如：我是一个……的人',
+                examples: [
+                    '我是一个爱孩子但有时会失控的妈妈，我在学习成长',
+                    '我是一个敏感的人，在乎家人的感受，但也容易受伤',
+                    '我是一个努力的人，希望做得更好，但也需要被支持'
+                ]
+            }
+        ];
+
+        // 选中的情绪标签
+        let selectedEmotions = {};
+
+        // 表单数据
+        let formData = {};
+        let userInfo = {
+            parentName: '',
+            studentName: '',
+            psychologyTeacher: '',
+            companionTeacher: ''
+        };
+        let expandedLayers = new Set([0]); // 默认展开第一个
+
+        // 初始化页面
+        function initPage() {
+            // 设置日期
+            const now = new Date();
+            const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${weekday[now.getDay()]}`;
+            document.getElementById('header-date').textContent = dateStr;
+            
+            // 渲染进度指示器
+            renderProgressIndicator();
+            
+            // 渲染层次卡片
+            renderLayers();
+            
+            // 自动聚焦第一个输入框
+            setTimeout(() => {
+                const firstInput = document.getElementById('input-behavior');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 600);
+        }
+
+        const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+        // 渲染进度指示器
+        function renderProgressIndicator() {
+            const container = document.getElementById('progress-indicator');
+            container.innerHTML = layers.map((_, i) => 
+                `<div class="progress-dot" data-index="${i}"></div>`
+            ).join('');
+        }
+
+        // 更新进度指示器
+        function updateProgressIndicator() {
+            const dots = document.querySelectorAll('.progress-dot');
+            dots.forEach((dot, i) => {
+                const input = document.getElementById(`input-${layers[i].id}`);
+                if (input && input.value.trim()) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        // 渲染层次卡片
+        function renderLayers() {
+            const container = document.getElementById('layers-section');
+            container.innerHTML = layers.map((layer, index) => {
+                // 渲染示例列表
+                const examplesHtml = layer.examples.map(ex => 
+                    `<li class="example-text">"${ex}"</li>`
+                ).join('');
+                
+                // 渲染应对方式提示
+                let copingHintsHtml = '';
+                if (layer.copingHints) {
+                    copingHintsHtml = `
+                        <div class="coping-hints">
+                            ${layer.copingHints.map(hint => `
+                                <div class="coping-hint-item">
+                                    <span class="coping-hint-name">${hint.name}：</span>
+                                    <span class="coping-hint-desc">${hint.desc}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                // 渲染情绪标签
+                let emotionTagsHtml = '';
+                if (layer.emotionTags) {
+                    emotionTagsHtml = `<div class="emotion-tags-section">`;
+                    const tagClassMap = {
+                        fear: 'emotion-fear',
+                        sad: 'emotion-sad',
+                        angry: 'emotion-angry',
+                        disgust: 'emotion-disgust',
+                        shame: 'emotion-shame',
+                        surprise: 'emotion-surprise',
+                        happy: 'emotion-happy',
+                        complex: 'emotion-complex'
+                    };
+                    
+                    for (const [key, category] of Object.entries(layer.emotionTags)) {
+                        emotionTagsHtml += `
+                            <div class="emotion-category">
+                                <div class="emotion-category-label">${category.label}</div>
+                                <div class="emotion-tags">
+                                    ${category.words.map(word => `
+                                        <span class="emotion-tag ${tagClassMap[key]}" 
+                                              data-category="${key}" 
+                                              data-word="${word}"
+                                              onclick="toggleEmotionTag(this)">${word}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    emotionTagsHtml += `</div>`;
+                }
+                
+                // 渲染渴望词汇（仅供参考，不可点击）
+                let desireWordsHtml = '';
+                if (layer.desireCategories) {
+                    desireWordsHtml = `
+                        <div class="desire-words-section">
+                            <div class="desire-words-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="#E8A4B8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                参考词汇（仅供参考，帮助识别内心渴望）
+                            </div>
+                            ${layer.desireCategories.needs ? `
+                                <div class="desire-category desire-category-needs">
+                                    <div class="desire-category-title">${layer.desireCategories.needs.label}</div>
+                                    <div class="desire-tags">
+                                        ${layer.desireCategories.needs.words.map(word => `
+                                            <span class="desire-tag">${word}</span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${layer.desireCategories.fears ? `
+                                <div class="desire-category desire-category-fears">
+                                    <div class="desire-category-title">${layer.desireCategories.fears.label}</div>
+                                    <div class="desire-tags">
+                                        ${layer.desireCategories.fears.words.map(word => `
+                                            <span class="desire-tag">${word}</span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="layer-card ${expandedLayers.has(index) ? 'expanded' : ''}" data-index="${index}">
+                        <div class="layer-header" onclick="toggleLayer(${index})">
+                            <div class="layer-icon ${layer.icon}">${layer.icon}</div>
+                            <div class="layer-info">
+                                <div class="layer-title">
+                                    ${layer.title}
+                                    <span style="font-size:12px;color:#C4B8C4;font-weight:400;">·</span>
+                                    <span style="font-size:13px;color:#C4B8C4;font-weight:400;">${layer.subtitle}</span>
+                                </div>
+                            </div>
+                            <div class="layer-expand-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                            </div>
+                        </div>
+                        <div class="layer-content">
+                            <div class="layer-prompt">
+                                <div class="prompt-label">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                    引导问题
+                                </div>
+                                <div class="prompt-text">${layer.prompt}</div>
+                            </div>
+                            
+                            ${copingHintsHtml}
+                            
+                            ${emotionTagsHtml}
+                            
+                            ${desireWordsHtml}
+                            
+                            <div class="example-box">
+                                <div class="example-label">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="#E8A4B8"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+                                    参考示例
+                                </div>
+                                <ul class="example-list">
+                                    ${examplesHtml}
+                                </ul>
+                            </div>
+                            
+                            <div class="input-area">
+                                <textarea class="textarea-field" id="input-${layer.id}" placeholder="${layer.placeholder}" maxlength="200" oninput="handleInput('${layer.id}', this)">${formData[layer.id] || ''}</textarea>
+                                <div class="word-count"><span id="count-${layer.id}">${(formData[layer.id] || '').length}</span>/200</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            updateProgressIndicator();
+        }
+
+        // 切换情绪标签
+        function toggleEmotionTag(tag) {
+            const category = tag.dataset.category;
+            const word = tag.dataset.word;
+            
+            if (!selectedEmotions[category]) {
+                selectedEmotions[category] = [];
+            }
+            
+            const index = selectedEmotions[category].indexOf(word);
+            if (index > -1) {
+                selectedEmotions[category].splice(index, 1);
+                tag.classList.remove('selected');
+            } else {
+                selectedEmotions[category].push(word);
+                tag.classList.add('selected');
+            }
+            
+            // 更新输入框
+            updateFeelingsInput();
+        }
+
+        // 更新感受输入框
+        function updateFeelingsInput() {
+            const textarea = document.getElementById('input-feelings');
+            if (!textarea) return;
+            
+            // 收集所有选中的情绪词
+            const allSelected = [];
+            for (const category in selectedEmotions) {
+                allSelected.push(...selectedEmotions[category]);
+            }
+            
+            // 合并到现有内容
+            const existing = textarea.value.trim();
+            const newValue = existing ? `${existing}、${allSelected.join('、')}` : allSelected.join('、');
+            
+            // 避免重复
+            if (existing && allSelected.length > 0) {
+                const existingArr = existing.split(/[、,，]/).map(s => s.trim()).filter(Boolean);
+                const unique = [...new Set([...existingArr, ...allSelected])];
+                textarea.value = unique.join('、');
+            } else {
+                textarea.value = newValue;
+            }
+            
+            // 触发输入事件更新字数统计
+            handleInput('feelings', textarea);
+        }
+
+        // 切换层次展开/折叠
+        function toggleLayer(index) {
+            const card = document.querySelector(`.layer-card[data-index="${index}"]`);
+            if (expandedLayers.has(index)) {
+                expandedLayers.delete(index);
+                card.classList.remove('expanded');
+            } else {
+                expandedLayers.add(index);
+                card.classList.add('expanded');
+            }
+        }
+
+        // 处理输入
+        function handleInput(layerId, textarea) {
+            formData[layerId] = textarea.value.trim();
+            document.getElementById(`count-${layerId}`).textContent = textarea.value.length;
+            updateProgressIndicator();
+            
+            // 自动调整高度
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max(80, textarea.scrollHeight) + 'px';
+        }
+
+        // 生成图片
+        function generateImage() {
+            document.getElementById('form-container').style.display = 'none';
+            document.querySelector('.header-fixed').style.display = 'none';
+            document.querySelector('.footer-fixed').style.display = 'none';
+            document.getElementById('result-page').classList.add('active');
+            
+            // 保存用户信息
+            userInfo.parentName = document.getElementById('parent-name').value.trim();
+            userInfo.studentName = document.getElementById('student-name').value.trim();
+            userInfo.psychologyTeacher = document.getElementById('psychology-teacher').value.trim();
+            userInfo.companionTeacher = document.getElementById('companion-teacher').value.trim();
+            
+            // 绘制图片
+            drawCanvas();
+            
+            window.scrollTo(0, 0);
+        }
+
+        // 绘制Canvas
+        function drawCanvas() {
+            const canvas = document.getElementById('preview-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const width = 690;
+            // 动态计算高度：标题区110 + 冰山区220 + 8层内容(每层动态) + 底部80
+            const layerHeight = 130; // 增加每层高度，确保内容完整显示
+            let totalContentHeight = 0;
+            layers.forEach((layer) => {
+                const value = formData[layer.id] || '';
+                // 根据内容长度计算高度，每层基础130，每多一行加25
+                const lines = Math.ceil(value.length / 20) || 1;
+                totalContentHeight += layerHeight + Math.max(0, (lines - 2) * 25);
+            });
+            const height = 110 + 220 + totalContentHeight + 80;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // 背景
+            const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+            bgGrad.addColorStop(0, '#FFF5F7');
+            bgGrad.addColorStop(0.5, '#FFFAF5');
+            bgGrad.addColorStop(1, '#F5F0FF');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, width, height);
+            
+            // 装饰圆
+            ctx.fillStyle = 'rgba(232, 164, 184, 0.1)';
+            ctx.beginPath();
+            ctx.arc(width - 50, 100, 150, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(168, 213, 229, 0.1)';
+            ctx.beginPath();
+            ctx.arc(50, height - 200, 120, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 标题区
+            ctx.fillStyle = '#E8A4B8';
+            ctx.beginPath();
+            ctx.arc(60, 60, 30, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 28px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('❄️', 60, 62);
+            
+            ctx.fillStyle = '#5D4E60';
+            ctx.font = 'bold 28px "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('冰山日记', 100, 58);
+            
+            // 显示用户信息
+            ctx.fillStyle = '#8B7B8E';
+            ctx.font = '14px "Noto Sans SC", sans-serif';
+            const infoText = userInfo.parentName || userInfo.studentName 
+                ? `${userInfo.parentName || '家长'} / ${userInfo.studentName || '学生'}`
+                : '匿名记录';
+            ctx.fillText(infoText, 100, 82);
+            
+            // 日期
+            const now = new Date();
+            const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            ctx.fillStyle = '#B8A8B8';
+            ctx.font = '12px "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(dateStr, width - 40, 70);
+            
+            // 分隔线
+            ctx.strokeStyle = 'rgba(232, 164, 184, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, 110);
+            ctx.lineTo(width - 40, 110);
+            ctx.stroke();
+            
+            // 冰山图形
+            const centerX = width / 2;
+            const icebergTop = 140;
+            const icebergWidth = 280;
+            const icebergHeight = 160;
+            
+            ctx.fillStyle = 'rgba(184, 222, 241, 0.6)';
+            ctx.beginPath();
+            ctx.moveTo(centerX, icebergTop);
+            ctx.lineTo(centerX + icebergWidth/2, icebergTop + icebergHeight);
+            ctx.lineTo(centerX - icebergWidth/2, icebergTop + icebergHeight);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(centerX, icebergTop + 10);
+            ctx.lineTo(centerX + 40, icebergTop + 80);
+            ctx.lineTo(centerX - 20, icebergTop + 60);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(137, 207, 240, 0.4)';
+            ctx.fillRect(0, icebergTop + icebergHeight - 20, width, 80);
+            
+            ctx.strokeStyle = 'rgba(137, 207, 240, 0.6)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, icebergTop + icebergHeight + 10 + i * 20);
+                for (let x = 0; x <= width; x += 30) {
+                    ctx.lineTo(x, icebergTop + icebergHeight + 10 + i * 20 + Math.sin(x / 30 + i) * 5);
+                }
+                ctx.stroke();
+            }
+            
+            // 层次内容
+            const contentStartY = icebergTop + icebergHeight + 60;
+            const baseLayerHeight = 130;
+            const icons = ['🌊', '🛡️', '💭', '🔄', '💡', '⭐', '💖', '🦋'];
+            const titles = ['行为', '应对', '感受', '感受的感受', '观点', '期待', '渴望', '自我'];
+            
+            let currentY = contentStartY;
+            layers.forEach((layer, i) => {
+                const value = formData[layer.id] || '（未填写）';
+                const maxWidth = width - 130;
+                const lines = wrapText(ctx, value, maxWidth);
+                const lineCount = Math.min(lines.length, 4); // 最多显示4行
+                const extraHeight = Math.max(0, (lineCount - 2) * 25);
+                const cardHeight = baseLayerHeight + extraHeight;
+                
+                // 卡片背景
+                ctx.fillStyle = 'white';
+                roundRect(ctx, 30, currentY, width - 60, cardHeight - 10, 16);
+                ctx.fill();
+                
+                // 阴影
+                ctx.shadowColor = 'rgba(93, 78, 96, 0.08)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 4;
+                roundRect(ctx, 30, currentY, width - 60, cardHeight - 10, 16);
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+                
+                // 序号
+                ctx.fillStyle = 'rgba(232, 164, 184, 0.2)';
+                ctx.beginPath();
+                ctx.arc(55, currentY + 30, 16, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#E8A4B8';
+                ctx.font = 'bold 14px "Noto Sans SC", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(i + 1, 55, currentY + 30);
+                
+                // 图标
+                ctx.font = '22px sans-serif';
+                ctx.fillText(icons[i], 55, currentY + 60);
+                
+                // 标题
+                ctx.fillStyle = '#5D4E60';
+                ctx.font = 'bold 16px "Noto Sans SC", sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(titles[i], 85, currentY + 30);
+                
+                // 内容
+                ctx.fillStyle = value === '（未填写）' ? '#C4B8C4' : '#8B7B8E';
+                ctx.font = '14px "Noto Sans SC", sans-serif';
+                const lineHeight = 22;
+                lines.slice(0, 4).forEach((line, idx) => {
+                    ctx.fillText(line, 85, currentY + 56 + idx * lineHeight);
+                });
+                
+                currentY += cardHeight;
+            });
+            
+            // 底部装饰
+            const footerY = currentY + 20;
+            
+            ctx.fillStyle = '#E8A4B8';
+            ctx.beginPath();
+            ctx.arc(width/2 - 30, footerY, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(width/2, footerY, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(width/2 + 30, footerY, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#C4B8C4';
+            ctx.font = '12px "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('萨提亚冰山理论 · 心理觉察之旅', width/2, footerY + 30);
+            
+            // 保存到本地Storage
+            localStorage.setItem('iceberg_diary', JSON.stringify({
+                userInfo: userInfo,
+                data: formData,
+                date: now.toISOString()
+            }));
+        }
+
+        // 圆角矩形
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        // 文字换行
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split('');
+            const lines = [];
+            let currentLine = '';
+            
+            for (const char of words) {
+                const testLine = currentLine + char;
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = char;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+            
+            return lines;
+        }
+
+        // 保存图片
+        function saveImage() {
+            const canvas = document.getElementById('preview-canvas');
+            const link = document.createElement('a');
+            link.download = `冰山日记_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('图片已保存');
+        }
+
+        // 分享图片
+        async function shareImage() {
+            const canvas = document.getElementById('preview-canvas');
+            
+            try {
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+                showToast('图片已复制到剪贴板');
+            } catch (err) {
+                showToast('请长按图片保存后分享');
+            }
+        }
+
+        // 重新开始
+        function restartJourney() {
+            formData = {};
+            selectedEmotions = {};
+            document.getElementById('form-container').style.display = 'block';
+            document.querySelector('.header-fixed').style.display = 'block';
+            document.querySelector('.footer-fixed').style.display = 'block';
+            document.getElementById('result-page').classList.remove('active');
+            
+            // 清空所有输入
+            document.getElementById('parent-name').value = '';
+            document.getElementById('student-name').value = '';
+            document.getElementById('psychology-teacher').value = '';
+            document.getElementById('companion-teacher').value = '';
+            layers.forEach(layer => {
+                const input = document.getElementById(`input-${layer.id}`);
+                if (input) {
+                    input.value = '';
+                    input.style.height = 'auto';
+                }
+                const count = document.getElementById(`count-${layer.id}`);
+                if (count) count.textContent = '0';
+            });
+            
+            updateProgressIndicator();
+            window.scrollTo(0, 0);
+        }
+
+        // Toast提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // 页面加载
+        window.addEventListener('load', initPage);
+    </script>
+</body>
+</html>
