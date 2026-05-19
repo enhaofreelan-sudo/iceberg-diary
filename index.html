@@ -763,6 +763,8 @@
         .result-page {
             display: none;
             min-height: 100vh;
+            max-width: 430px;
+            margin: 0 auto;
             padding: 20px;
             padding-bottom: 100px;
         }
@@ -1553,26 +1555,48 @@
             window.scrollTo(0, 0);
         }
 
-        // 绘制Canvas
+        // 绘制Canvas（2x高分辨率，适配手机屏幕）
         function drawCanvas() {
             const canvas = document.getElementById('preview-canvas');
             const ctx = canvas.getContext('2d');
             
-            const width = 690;
-            // 动态计算高度：标题区110 + 冰山区220 + 8层内容(每层动态) + 底部80
-            const layerHeight = 130; // 增加每层高度，确保内容完整显示
-            let totalContentHeight = 0;
+            // 2x分辨率，手机端清晰显示
+            const scale = 2;
+            const logicalWidth = 750;
+            const width = logicalWidth * scale;
+            
+            // 字体和间距基准（2x放大）
+            const S = scale;
+            
+            // 预计算内容高度
+            const titleAreaH = 160 * S;
+            const cardPadding = 20 * S;
+            const cardGap = 14 * S;
+            const titleFontSize = 20 * S;
+            const contentFontSize = 17 * S;
+            const contentLineH = 28 * S;
+            const cardMinH = 50 * S;
+            
+            // 先用临时ctx计算每层文字行数
+            ctx.font = `${contentFontSize}px "Noto Sans SC", sans-serif`;
+            const contentMaxWidth = width - 160 * S;
+            
+            let totalCardsH = 0;
+            const layerLines = [];
             layers.forEach((layer) => {
-                const value = formData[layer.id] || '';
-                // 根据内容长度计算高度，每层基础130，每多一行加25
-                const lines = Math.ceil(value.length / 20) || 1;
-                totalContentHeight += layerHeight + Math.max(0, (lines - 2) * 25);
+                const value = formData[layer.id] || '（未填写）';
+                const lines = wrapText(ctx, value, contentMaxWidth);
+                layerLines.push(lines);
+                const textH = Math.max(1, lines.length) * contentLineH;
+                totalCardsH += cardPadding * 2 + 30 * S + textH + cardGap;
             });
-            const height = 110 + 220 + totalContentHeight + 80;
+            
+            const footerH = 80 * S;
+            const height = titleAreaH + totalCardsH + footerH;
             canvas.width = width;
             canvas.height = height;
             
-            // 背景
+            // 背景渐变
             const bgGrad = ctx.createLinearGradient(0, 0, width, height);
             bgGrad.addColorStop(0, '#FFF5F7');
             bgGrad.addColorStop(0.5, '#FFFAF5');
@@ -1581,172 +1605,173 @@
             ctx.fillRect(0, 0, width, height);
             
             // 装饰圆
-            ctx.fillStyle = 'rgba(232, 164, 184, 0.1)';
+            ctx.fillStyle = 'rgba(232, 164, 184, 0.08)';
             ctx.beginPath();
-            ctx.arc(width - 50, 100, 150, 0, Math.PI * 2);
+            ctx.arc(width - 60 * S, 80 * S, 180 * S, 0, Math.PI * 2);
             ctx.fill();
             
-            ctx.fillStyle = 'rgba(168, 213, 229, 0.1)';
+            ctx.fillStyle = 'rgba(168, 213, 229, 0.08)';
             ctx.beginPath();
-            ctx.arc(50, height - 200, 120, 0, Math.PI * 2);
+            ctx.arc(60 * S, height - 200 * S, 140 * S, 0, Math.PI * 2);
             ctx.fill();
             
-            // 标题区
+            // === 标题区 ===
+            // 图标背景圆
+            const iconCenterX = 50 * S;
+            const iconCenterY = 50 * S;
+            ctx.fillStyle = 'linear-gradient(135deg, #E8A4B8, #F5D5A0)';
             ctx.fillStyle = '#E8A4B8';
             ctx.beginPath();
-            ctx.arc(60, 60, 30, 0, Math.PI * 2);
+            ctx.arc(iconCenterX, iconCenterY, 28 * S, 0, Math.PI * 2);
             ctx.fill();
             
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 28px sans-serif';
+            ctx.font = `${26 * S}px sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('❄️', 60, 62);
+            ctx.fillText('❄️', iconCenterX, iconCenterY + 2 * S);
             
+            // 标题文字
             ctx.fillStyle = '#5D4E60';
-            ctx.font = 'bold 28px "Noto Sans SC", sans-serif';
+            ctx.font = `bold ${30 * S}px "Noto Sans SC", sans-serif`;
             ctx.textAlign = 'left';
-            ctx.fillText('冰山日记', 100, 58);
+            ctx.textBaseline = 'middle';
+            ctx.fillText('冰山日记', 90 * S, 40 * S);
             
-            // 显示用户信息
+            // 用户信息
             ctx.fillStyle = '#8B7B8E';
-            ctx.font = '14px "Noto Sans SC", sans-serif';
+            ctx.font = `${16 * S}px "Noto Sans SC", sans-serif`;
             const infoText = userInfo.parentName || userInfo.studentName 
-                ? `${userInfo.parentName || '家长'} / ${userInfo.studentName || '学生'}`
+                ? `${userInfo.parentName || '家长'} · ${userInfo.studentName || '学生'}`
                 : '匿名记录';
-            ctx.fillText(infoText, 100, 82);
+            ctx.fillText(infoText, 90 * S, 68 * S);
+            
+            // 老师信息
+            let teacherInfo = '';
+            if (userInfo.psychologyTeacher) teacherInfo += `心理老师：${userInfo.psychologyTeacher}  `;
+            if (userInfo.companionTeacher) teacherInfo += `陪伴老师：${userInfo.companionTeacher}`;
+            if (teacherInfo) {
+                ctx.fillStyle = '#B8A8B8';
+                ctx.font = `${14 * S}px "Noto Sans SC", sans-serif`;
+                ctx.fillText(teacherInfo.trim(), 90 * S, 90 * S);
+            }
             
             // 日期
             const now = new Date();
-            const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
             ctx.fillStyle = '#B8A8B8';
-            ctx.font = '12px "Noto Sans SC", sans-serif';
+            ctx.font = `${14 * S}px "Noto Sans SC", sans-serif`;
             ctx.textAlign = 'right';
-            ctx.fillText(dateStr, width - 40, 70);
+            ctx.fillText(dateStr, width - 40 * S, 46 * S);
             
             // 分隔线
             ctx.strokeStyle = 'rgba(232, 164, 184, 0.3)';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1 * S;
             ctx.beginPath();
-            ctx.moveTo(40, 110);
-            ctx.lineTo(width - 40, 110);
+            ctx.moveTo(40 * S, 115 * S);
+            ctx.lineTo(width - 40 * S, 115 * S);
             ctx.stroke();
             
-            // 冰山图形
-            const centerX = width / 2;
-            const icebergTop = 140;
-            const icebergWidth = 280;
-            const icebergHeight = 160;
-            
-            ctx.fillStyle = 'rgba(184, 222, 241, 0.6)';
-            ctx.beginPath();
-            ctx.moveTo(centerX, icebergTop);
-            ctx.lineTo(centerX + icebergWidth/2, icebergTop + icebergHeight);
-            ctx.lineTo(centerX - icebergWidth/2, icebergTop + icebergHeight);
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.beginPath();
-            ctx.moveTo(centerX, icebergTop + 10);
-            ctx.lineTo(centerX + 40, icebergTop + 80);
-            ctx.lineTo(centerX - 20, icebergTop + 60);
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.fillStyle = 'rgba(137, 207, 240, 0.4)';
-            ctx.fillRect(0, icebergTop + icebergHeight - 20, width, 80);
-            
-            ctx.strokeStyle = 'rgba(137, 207, 240, 0.6)';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 3; i++) {
+            // 冰山简约水线装饰
+            const waveY = 130 * S;
+            ctx.strokeStyle = 'rgba(137, 207, 240, 0.4)';
+            ctx.lineWidth = 2 * S;
+            for (let w = 0; w < 2; w++) {
                 ctx.beginPath();
-                ctx.moveTo(0, icebergTop + icebergHeight + 10 + i * 20);
-                for (let x = 0; x <= width; x += 30) {
-                    ctx.lineTo(x, icebergTop + icebergHeight + 10 + i * 20 + Math.sin(x / 30 + i) * 5);
+                ctx.moveTo(0, waveY + w * 12 * S);
+                for (let x = 0; x <= width; x += 20 * S) {
+                    ctx.lineTo(x, waveY + w * 12 * S + Math.sin(x / (40 * S) + w) * 4 * S);
                 }
                 ctx.stroke();
             }
             
-            // 层次内容
-            const contentStartY = icebergTop + icebergHeight + 60;
-            const baseLayerHeight = 130;
+            // === 层次内容卡片 ===
             const icons = ['🌊', '🛡️', '💭', '🔄', '💡', '⭐', '💖', '🦋'];
-            const titles = ['行为', '应对', '感受', '感受的感受', '观点', '期待', '渴望', '自我'];
+            const titles = ['行为', '应对方式', '感受', '感受的感受', '观点', '期待', '渴望', '自我'];
+            // 每层左侧色条颜色
+            const barColors = ['#89CFF0', '#8CD4A8', '#E8A878', '#B894D4', '#FFD633', '#FF8A95', '#FF6B6B', '#9D7BE5'];
             
-            let currentY = contentStartY;
+            let currentY = titleAreaH;
+            const cardLeft = 30 * S;
+            const cardWidth = width - 60 * S;
+            
             layers.forEach((layer, i) => {
                 const value = formData[layer.id] || '（未填写）';
-                const maxWidth = width - 130;
-                const lines = wrapText(ctx, value, maxWidth);
-                const lineCount = Math.min(lines.length, 4); // 最多显示4行
-                const extraHeight = Math.max(0, (lineCount - 2) * 25);
-                const cardHeight = baseLayerHeight + extraHeight;
+                const lines = layerLines[i];
+                const textH = Math.max(1, lines.length) * contentLineH;
+                const cardH = cardPadding * 2 + 30 * S + textH;
+                
+                // 卡片阴影
+                ctx.shadowColor = 'rgba(93, 78, 96, 0.06)';
+                ctx.shadowBlur = 12 * S;
+                ctx.shadowOffsetY = 4 * S;
                 
                 // 卡片背景
-                ctx.fillStyle = 'white';
-                roundRect(ctx, 30, currentY, width - 60, cardHeight - 10, 16);
-                ctx.fill();
-                
-                // 阴影
-                ctx.shadowColor = 'rgba(93, 78, 96, 0.08)';
-                ctx.shadowBlur = 10;
-                ctx.shadowOffsetY = 4;
-                roundRect(ctx, 30, currentY, width - 60, cardHeight - 10, 16);
+                ctx.fillStyle = '#FFFFFF';
+                roundRect(ctx, cardLeft, currentY, cardWidth, cardH, 16 * S);
                 ctx.fill();
                 ctx.shadowColor = 'transparent';
                 
-                // 序号
-                ctx.fillStyle = 'rgba(232, 164, 184, 0.2)';
-                ctx.beginPath();
-                ctx.arc(55, currentY + 30, 16, 0, Math.PI * 2);
+                // 左侧色条
+                ctx.fillStyle = barColors[i];
+                roundRect(ctx, cardLeft, currentY, 5 * S, cardH, 16 * S);
+                // 用矩形覆盖右侧圆角
+                ctx.fillRect(cardLeft + 3 * S, currentY, 5 * S, cardH);
                 ctx.fill();
                 
-                ctx.fillStyle = '#E8A4B8';
-                ctx.font = 'bold 14px "Noto Sans SC", sans-serif';
+                // 序号圆
+                const numX = cardLeft + 30 * S;
+                const numY = currentY + cardPadding + 12 * S;
+                ctx.fillStyle = 'rgba(232, 164, 184, 0.15)';
+                ctx.beginPath();
+                ctx.arc(numX, numY, 16 * S, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = barColors[i];
+                ctx.font = `bold ${15 * S}px "Noto Sans SC", sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(i + 1, 55, currentY + 30);
+                ctx.fillText(i + 1, numX, numY);
                 
                 // 图标
-                ctx.font = '22px sans-serif';
-                ctx.fillText(icons[i], 55, currentY + 60);
+                ctx.font = `${22 * S}px sans-serif`;
+                ctx.fillText(icons[i], numX, numY + 34 * S);
                 
                 // 标题
                 ctx.fillStyle = '#5D4E60';
-                ctx.font = 'bold 16px "Noto Sans SC", sans-serif';
+                ctx.font = `bold ${titleFontSize}px "Noto Sans SC", sans-serif`;
                 ctx.textAlign = 'left';
-                ctx.fillText(titles[i], 85, currentY + 30);
+                ctx.textBaseline = 'middle';
+                ctx.fillText(titles[i], cardLeft + 60 * S, numY);
                 
-                // 内容
-                ctx.fillStyle = value === '（未填写）' ? '#C4B8C4' : '#8B7B8E';
-                ctx.font = '14px "Noto Sans SC", sans-serif';
-                const lineHeight = 22;
-                lines.slice(0, 4).forEach((line, idx) => {
-                    ctx.fillText(line, 85, currentY + 56 + idx * lineHeight);
+                // 内容文字
+                ctx.fillStyle = value === '（未填写）' ? '#C4B8C4' : '#6B5B6E';
+                ctx.font = `${contentFontSize}px "Noto Sans SC", sans-serif`;
+                ctx.textBaseline = 'top';
+                const textStartY = numY + 20 * S;
+                lines.forEach((line, idx) => {
+                    ctx.fillText(line, cardLeft + 60 * S, textStartY + idx * contentLineH);
                 });
                 
-                currentY += cardHeight;
+                currentY += cardH + cardGap;
             });
             
-            // 底部装饰
-            const footerY = currentY + 20;
+            // === 底部 ===
+            const footerY = currentY + 16 * S;
             
+            // 装饰点
             ctx.fillStyle = '#E8A4B8';
-            ctx.beginPath();
-            ctx.arc(width/2 - 30, footerY, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(width/2, footerY, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(width/2 + 30, footerY, 4, 0, Math.PI * 2);
-            ctx.fill();
+            for (let d = -1; d <= 1; d++) {
+                ctx.beginPath();
+                ctx.arc(width / 2 + d * 24 * S, footerY, 4 * S, 0, Math.PI * 2);
+                ctx.fill();
+            }
             
             ctx.fillStyle = '#C4B8C4';
-            ctx.font = '12px "Noto Sans SC", sans-serif';
+            ctx.font = `${14 * S}px "Noto Sans SC", sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText('萨提亚冰山理论 · 心理觉察之旅', width/2, footerY + 30);
+            ctx.textBaseline = 'top';
+            ctx.fillText('萨提亚冰山理论 · 心理觉察之旅', width / 2, footerY + 16 * S);
             
             // 保存到本地Storage
             localStorage.setItem('iceberg_diary', JSON.stringify({
