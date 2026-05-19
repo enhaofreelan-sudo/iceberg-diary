@@ -597,6 +597,23 @@
             border-radius: 16px;
             font-size: 12px;
             line-height: 1.4;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .desire-tag:active {
+            transform: scale(0.95);
+        }
+
+        .desire-tag.selected {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .desire-tag.selected::after {
+            content: ' ✓';
+            font-size: 11px;
         }
 
         /* 依附需求样式（积极） */
@@ -610,6 +627,11 @@
             color: var(--primary-dark);
         }
 
+        .desire-category-needs .desire-tag.selected {
+            background: linear-gradient(135deg, rgba(232, 164, 184, 0.35) 0%, rgba(245, 213, 160, 0.35) 100%);
+            border-color: var(--primary);
+        }
+
         /* 依附恐惧样式（消极） */
         .desire-category-fears .desire-category-title {
             color: #8B7B8E;
@@ -619,6 +641,35 @@
             background: rgba(139, 123, 142, 0.1);
             border: 1px solid rgba(139, 123, 142, 0.25);
             color: var(--text-light);
+        }
+
+        .desire-category-fears .desire-tag.selected {
+            background: rgba(139, 123, 142, 0.25);
+            border-color: #8B7B8E;
+        }
+
+        /* 导出按钮样式 */
+        .btn-export {
+            width: 100%;
+            padding: 14px;
+            margin-top: 12px;
+            background: var(--white);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--accent-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .btn-export:active {
+            transform: scale(0.98);
         }
 
         /* 输入区 */
@@ -1044,6 +1095,11 @@
             </div>
         </div>
 
+        <button class="btn-export" onclick="exportDiaryText()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            导出文字记录
+        </button>
+
         <button class="btn-restart" onclick="restartJourney()">
             重新填写冰山日记
         </button>
@@ -1205,6 +1261,9 @@
         // 选中的情绪标签
         let selectedEmotions = {};
 
+        // 选中的渴望标签
+        let selectedDesires = {};
+
         // 表单数据
         let formData = {};
         let userInfo = {
@@ -1317,21 +1376,21 @@
                     emotionTagsHtml += `</div>`;
                 }
                 
-                // 渲染渴望词汇（仅供参考，不可点击）
+                // 渲染渴望词汇（可点击选择）
                 let desireWordsHtml = '';
                 if (layer.desireCategories) {
                     desireWordsHtml = `
                         <div class="desire-words-section">
                             <div class="desire-words-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="#E8A4B8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                参考词汇（仅供参考，帮助识别内心渴望）
+                                点击选择词汇，帮助识别内心渴望
                             </div>
                             ${layer.desireCategories.needs ? `
                                 <div class="desire-category desire-category-needs">
                                     <div class="desire-category-title">${layer.desireCategories.needs.label}</div>
                                     <div class="desire-tags">
                                         ${layer.desireCategories.needs.words.map(word => `
-                                            <span class="desire-tag">${word}</span>
+                                            <span class="desire-tag" data-category="needs" data-word="${word}" onclick="toggleDesireTag(this)">${word}</span>
                                         `).join('')}
                                     </div>
                                 </div>
@@ -1341,7 +1400,7 @@
                                     <div class="desire-category-title">${layer.desireCategories.fears.label}</div>
                                     <div class="desire-tags">
                                         ${layer.desireCategories.fears.words.map(word => `
-                                            <span class="desire-tag">${word}</span>
+                                            <span class="desire-tag" data-category="fears" data-word="${word}" onclick="toggleDesireTag(this)">${word}</span>
                                         `).join('')}
                                     </div>
                                 </div>
@@ -1788,6 +1847,111 @@
             
             updateProgressIndicator();
             window.scrollTo(0, 0);
+        }
+
+        // 切换渴望标签选中状态
+        function toggleDesireTag(tag) {
+            const category = tag.dataset.category;
+            const word = tag.dataset.word;
+            
+            if (!selectedDesires[category]) {
+                selectedDesires[category] = [];
+            }
+            
+            const index = selectedDesires[category].indexOf(word);
+            if (index > -1) {
+                selectedDesires[category].splice(index, 1);
+                tag.classList.remove('selected');
+            } else {
+                selectedDesires[category].push(word);
+                tag.classList.add('selected');
+            }
+            
+            // 更新渴望输入框
+            updateDesiresInput();
+        }
+
+        // 更新渴望输入框
+        function updateDesiresInput() {
+            const textarea = document.getElementById('input-desires');
+            if (!textarea) return;
+            
+            // 收集所有选中的渴望词
+            const allSelected = [];
+            for (const category in selectedDesires) {
+                allSelected.push(...selectedDesires[category]);
+            }
+            
+            // 合并到现有内容（避免重复）
+            const existing = textarea.value.trim();
+            if (existing && allSelected.length > 0) {
+                const existingArr = existing.split(/[、,，]/).map(s => s.trim()).filter(Boolean);
+                const unique = [...new Set([...existingArr, ...allSelected])];
+                textarea.value = unique.join('、');
+            } else if (allSelected.length > 0) {
+                textarea.value = allSelected.join('、');
+            }
+            
+            handleInput('desires', textarea);
+        }
+
+        // 导出日记为文本文件
+        function exportDiaryText() {
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            // 构建层级标题映射
+            const layerTitles = {
+                'behavior': '行为（水面之上）',
+                'coping': '应对方式',
+                'feelings': '感受',
+                'feelings-about-feelings': '感受的感受',
+                'beliefs': '观点',
+                'expectations': '期待',
+                'desires': '渴望',
+                'self': '自我'
+            };
+            
+            let text = '';
+            text += '═══════════════════════════════\n';
+            text += '        冰 山 日 记\n';
+            text += '   萨提亚冰山理论 · 心理觉察\n';
+            text += '═══════════════════════════════\n\n';
+            text += `📅 日期：${dateStr}\n`;
+            
+            if (userInfo.parentName) text += `👤 家长：${userInfo.parentName}\n`;
+            if (userInfo.studentName) text += `👦 学生：${userInfo.studentName}\n`;
+            if (userInfo.psychologyTeacher) text += `🧠 心理老师：${userInfo.psychologyTeacher}\n`;
+            if (userInfo.companionTeacher) text += `🤝 陪伴老师：${userInfo.companionTeacher}\n`;
+            
+            text += '\n───────────────────────────────\n\n';
+            
+            const icons = ['🌊', '🛡️', '💭', '🔄', '💡', '⭐', '💖', '🦋'];
+            layers.forEach((layer, i) => {
+                const value = formData[layer.id] || '';
+                const title = layerTitles[layer.id] || layer.title;
+                text += `${icons[i]} 【第${i + 1}层】${title}\n`;
+                text += `${'─'.repeat(20)}\n`;
+                if (value) {
+                    text += `${value}\n`;
+                } else {
+                    text += `（未填写）\n`;
+                }
+                text += '\n';
+            });
+            
+            text += '───────────────────────────────\n';
+            text += '萨提亚冰山理论 · 心理觉察之旅\n';
+            
+            // 下载文件
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            const fileName = `冰山日记_${userInfo.studentName || userInfo.parentName || '匿名'}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.txt`;
+            link.download = fileName;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast('文字记录已导出');
         }
 
         // Toast提示
