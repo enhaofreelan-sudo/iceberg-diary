@@ -1111,6 +1111,10 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // ===== 后端 API 配置 =====
+        // 部署在同一服务器上使用相对路径，无需跨域
+        const WORKER_API_URL = '/api/submit';
+
         // 冰山层次数据 - 增强版
         const layers = [
             {
@@ -1549,10 +1553,52 @@
             userInfo.psychologyTeacher = document.getElementById('psychology-teacher').value.trim();
             userInfo.companionTeacher = document.getElementById('companion-teacher').value.trim();
             
+            // 异步提交数据到企业微信表格（不阻塞图片生成）
+            submitToServer();
+            
             // 绘制图片
             drawCanvas();
             
             window.scrollTo(0, 0);
+        }
+
+        // 提交数据到 Cloudflare Worker -> 企业微信智能表格
+        async function submitToServer() {
+            const now = new Date();
+            const submitTime = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            const payload = {
+                submitTime: submitTime,
+                userInfo: {
+                    parentName: userInfo.parentName,
+                    studentName: userInfo.studentName,
+                    psychologyTeacher: userInfo.psychologyTeacher,
+                    companionTeacher: userInfo.companionTeacher
+                },
+                layers: {}
+            };
+
+            // 收集所有层次数据
+            layers.forEach(layer => {
+                payload.layers[layer.id] = formData[layer.id] || '';
+            });
+
+            try {
+                const resp = await fetch(WORKER_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    showToast('日记已同步到记录表');
+                } else {
+                    console.error('提交失败:', result.message);
+                }
+            } catch (error) {
+                console.error('网络错误:', error);
+                // 提交失败不影响用户体验，静默处理
+            }
         }
 
         // 绘制Canvas（2x高分辨率，适配手机屏幕）
