@@ -11,9 +11,8 @@ desktop.ini
 *.tmp
 *.bak
 
-# 敏感配置（含 Webhook 地址）
-server/config.py
-
+# 敏感配置
+# server/config.py (已根据要求取消忽略，允许上传)
 # 废弃方案
 worker/
 
