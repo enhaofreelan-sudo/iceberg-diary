@@ -78,9 +78,10 @@ async def send_to_feishu_bitable(data: dict) -> dict:
         "行为": layers.get("behavior", ""),
         "应对方式": layers.get("coping", ""),
         "感受": layers.get("feelings", ""),
-        "感受的感受": layers.get("feelings-about-feelings", ""),
         "观点": layers.get("beliefs", ""),
-        "期待": layers.get("expectations", ""),
+        "期待自己": layers.get("expectations-self", ""),
+        "期待他人": layers.get("expectations-other", ""),
+        "别人对我的期待": layers.get("expectations-perceived", ""),
         "渴望": layers.get("desires", ""),
         "自我": layers.get("self", "")
     }
