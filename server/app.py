@@ -8,7 +8,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from config import WEBHOOK_URL, PORT
+import time
+from config import FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_TABLE_ID, PORT
 
 app = FastAPI(title="冰山日记后端")
 
@@ -20,74 +21,77 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-# 冰山层次标题映射
-LAYER_TITLES = {
-    "behavior": "🌊 行为",
-    "coping": "🛡️ 应对方式",
-    "feelings": "💭 感受",
-    "feelings-about-feelings": "🔄 感受的感受",
-    "beliefs": "💡 观点",
-    "expectations": "⭐ 期待",
-    "desires": "💖 渴望",
-    "self": "🦋 自我",
+# 用于缓存飞书 tenant_access_token
+_feishu_token_cache = {
+    "token": None,
+    "expire_at": 0
 }
 
+async def get_tenant_access_token() -> str:
+    """获取飞书 tenant_access_token 并带缓存"""
+    current_time = time.time()
+    if _feishu_token_cache["token"] and current_time < _feishu_token_cache["expire_at"]:
+        return _feishu_token_cache["token"]
 
-def build_markdown(data: dict) -> str:
-    """将表单数据构建为企业微信 Markdown 格式消息"""
-    submit_time = data.get("submitTime", "未知时间")
+    url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
+    payload = {
+        "app_id": FEISHU_APP_ID,
+        "app_secret": FEISHU_APP_SECRET
+    }
+    
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.post(url, json=payload)
+        data = resp.json()
+        if data.get("code") == 0:
+            token = data["tenant_access_token"]
+            # 提前 5 分钟过期
+            _feishu_token_cache["token"] = token
+            _feishu_token_cache["expire_at"] = current_time + data["expire"] - 300
+            return token
+        else:
+            raise Exception(f"获取飞书 Token 失败: {data.get('msg')}")
+
+async def send_to_feishu_bitable(data: dict) -> dict:
+    """发送数据到飞书多维表格"""
+    if "待替换" in FEISHU_APP_TOKEN or "待替换" in FEISHU_TABLE_ID:
+        raise Exception("飞书多维表格凭证尚未配置，请先在 config.py 中填写配置信息。")
+
+    token = await get_tenant_access_token()
+    url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{FEISHU_APP_TOKEN}/tables/{FEISHU_TABLE_ID}/records"
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    # 构造飞书多维表格需要的字段映射
     user_info = data.get("userInfo", {})
     layers = data.get("layers", {})
-
-    # 标题
-    lines = [f"## ❄️ 冰山日记提交"]
-    lines.append(f"> 时间：{submit_time}")
-
-    # 个人信息
-    parent = user_info.get("parentName", "")
-    student = user_info.get("studentName", "")
-    teacher_psy = user_info.get("psychologyTeacher", "")
-    teacher_comp = user_info.get("companionTeacher", "")
-
-    info_parts = []
-    if parent:
-        info_parts.append(f"家长：**{parent}**")
-    if student:
-        info_parts.append(f"学生：**{student}**")
-    if teacher_psy:
-        info_parts.append(f"心理老师：{teacher_psy}")
-    if teacher_comp:
-        info_parts.append(f"陪伴老师：{teacher_comp}")
-
-    if info_parts:
-        lines.append("> " + "　".join(info_parts))
-
-    lines.append("")
-
-    # 各层内容
-    for layer_id, title in LAYER_TITLES.items():
-        content = layers.get(layer_id, "").strip()
-        if content:
-            lines.append(f"**{title}**")
-            lines.append(f"{content}")
-            lines.append("")
-
-    return "\n".join(lines)
-
-
-async def send_webhook(markdown_text: str) -> dict:
-    """发送 Markdown 消息到企业微信群机器人"""
+    
+    # 这里的键名必须与飞书多维表格中设置的列名完全一致
+    fields = {
+        "提交时间": data.get("submitTime", ""),
+        "家长姓名": user_info.get("parentName", ""),
+        "学生姓名": user_info.get("studentName", ""),
+        "心理老师": user_info.get("psychologyTeacher", ""),
+        "陪伴老师": user_info.get("companionTeacher", ""),
+        "行为": layers.get("behavior", ""),
+        "应对方式": layers.get("coping", ""),
+        "感受": layers.get("feelings", ""),
+        "感受的感受": layers.get("feelings-about-feelings", ""),
+        "观点": layers.get("beliefs", ""),
+        "期待": layers.get("expectations", ""),
+        "渴望": layers.get("desires", ""),
+        "自我": layers.get("self", "")
+    }
+    
     payload = {
-        "msgtype": "markdown",
-        "markdown": {
-            "content": markdown_text
-        }
+        "fields": fields
     }
 
     async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.post(WEBHOOK_URL, json=payload)
+        resp = await client.post(url, headers=headers, json=payload)
         return resp.json()
-
 
 @app.post("/api/submit")
 async def submit_diary(request: Request):
@@ -102,18 +106,15 @@ async def submit_diary(request: Request):
                 content={"success": False, "message": "提交数据为空"}
             )
 
-        # 构建消息
-        markdown = build_markdown(data)
+        # 发送到飞书多维表格
+        result = await send_to_feishu_bitable(data)
 
-        # 发送到企业微信群
-        webhook_result = await send_webhook(markdown)
-
-        if webhook_result.get("errcode") == 0:
+        if result.get("code") == 0:
             return {"success": True, "message": "提交成功"}
         else:
             return JSONResponse(
                 status_code=500,
-                content={"success": False, "message": f"Webhook 发送失败: {webhook_result.get('errmsg', '未知错误')}"}
+                content={"success": False, "message": f"飞书写入失败: {result.get('msg', '未知错误')}"}
             )
 
     except Exception as e:
