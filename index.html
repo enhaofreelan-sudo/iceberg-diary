@@ -818,8 +818,26 @@
 
         .preview-canvas {
             width: 100%;
-            border-radius: 16px;
-            display: block;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .preview-img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: none;
+            margin-bottom: 15px;
+            -webkit-touch-callout: default;
+        }
+
+        .save-tip {
+            text-align: center;
+            font-size: 13px;
+            color: #8B7B8E;
+            margin-bottom: 20px;
+            display: none;
         }
 
         .preview-actions {
@@ -1285,6 +1303,8 @@
 
         <div class="preview-container">
             <canvas id="preview-canvas" class="preview-canvas"></canvas>
+            <img id="preview-img" class="preview-img" alt="你的冰山日记" />
+            <div id="save-tip" class="save-tip">💡 提示：手机端请长按上方图片保存至相册</div>
             <div class="preview-actions">
                 <button class="btn-save" onclick="saveImage()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
@@ -1326,7 +1346,6 @@
                 <div class="vip-features">
                     <div style="font-weight:600;margin-bottom:8px;font-size:14px;">会员权益</div>
                     <span>无限日记数量</span>
-                    <span>AI 情绪分析反馈</span>
                     <span>冰山深度引导对话</span>
                 </div>
                 
@@ -1799,7 +1818,7 @@
         }
 
         // 生成图片
-        function generateImage() {
+        async function generateImage() {
             document.getElementById('form-container').style.display = 'none';
             document.querySelector('.header-fixed').style.display = 'none';
             document.querySelector('.footer-fixed').style.display = 'none';
@@ -1815,7 +1834,21 @@
             submitToServer();
             
             // 绘制图片
-            drawCanvas();
+            await drawCanvas();
+            
+            // 处理手机端长按保存
+            const canvas = document.getElementById('preview-canvas');
+            const img = document.getElementById('preview-img');
+            const tip = document.getElementById('save-tip');
+            
+            img.src = canvas.toDataURL('image/png');
+            canvas.style.display = 'none';
+            img.style.display = 'block';
+            
+            // 简单判断是否为移动设备
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                tip.style.display = 'block';
+            }
             
             window.scrollTo(0, 0);
         }
@@ -1878,7 +1911,7 @@
         }
 
         // 绘制Canvas（2x高分辨率，适配手机屏幕）
-        function drawCanvas() {
+        async function drawCanvas() {
             const canvas = document.getElementById('preview-canvas');
             const ctx = canvas.getContext('2d');
             
@@ -1916,7 +1949,7 @@
                 totalCardsH += cardPadding * 2 + 30 * S + textH + cardGap;
             });
             
-            const footerH = 80 * S;
+            const footerH = 190 * S;
             const height = titleAreaH + totalCardsH + footerH;
             canvas.width = width;
             canvas.height = height;
@@ -2081,22 +2114,57 @@
                 currentY += cardH + cardGap;
             });
             
-            // === 底部 ===
-            const footerY = currentY + 16 * S;
+            // === 底部二维码卡片区 ===
+            const footerY = currentY + 10 * S;
+            const qrCardW = width - 60 * S;
+            const qrCardH = 150 * S;
+            const qrCardX = 30 * S;
             
-            // 装饰点
-            ctx.fillStyle = '#E8A4B8';
-            for (let d = -1; d <= 1; d++) {
-                ctx.beginPath();
-                ctx.arc(width / 2 + d * 24 * S, footerY, 4 * S, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            // 冰山风格渐变背景
+            const qrGrad = ctx.createLinearGradient(qrCardX, footerY, qrCardX + qrCardW, footerY + qrCardH);
+            qrGrad.addColorStop(0, 'rgba(137, 207, 240, 0.12)');
+            qrGrad.addColorStop(1, 'rgba(232, 164, 184, 0.12)');
+            ctx.fillStyle = qrGrad;
+            roundRect(ctx, qrCardX, footerY, qrCardW, qrCardH, 16 * S);
+            ctx.fill();
             
-            ctx.fillStyle = '#C4B8C4';
-            ctx.font = `${14 * S}px "Noto Sans SC", sans-serif`;
-            ctx.textAlign = 'center';
+            ctx.fillStyle = '#6B5B6E';
+            ctx.font = `bold ${22 * S}px "Noto Sans SC", sans-serif`;
+            ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
-            ctx.fillText('萨提亚冰山理论 · 心理觉察之旅', width / 2, footerY + 16 * S);
+            ctx.fillText('深入觉察与专业引导', qrCardX + 30 * S, footerY + 30 * S);
+            
+            ctx.fillStyle = '#8B7B8E';
+            ctx.font = `${15 * S}px "Noto Sans SC", sans-serif`;
+            ctx.fillText('长按识别二维码，开启探索之旅', qrCardX + 30 * S, footerY + 68 * S);
+            
+            ctx.fillStyle = '#B8A8B8';
+            ctx.font = `${13 * S}px "Noto Sans SC", sans-serif`;
+            ctx.fillText('萨提亚冰山理论 · 心理觉察日记', qrCardX + 30 * S, footerY + 110 * S);
+            
+            // 绘制二维码图片
+            try {
+                const qrImg = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = 'counselor.png';
+                });
+                
+                const qrSize = 110 * S;
+                const qrX = qrCardX + qrCardW - qrSize - 20 * S;
+                const qrY = footerY + 20 * S;
+                
+                ctx.save();
+                ctx.beginPath();
+                roundRect(ctx, qrX, qrY, qrSize, qrSize, 8 * S);
+                ctx.clip();
+                ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+                ctx.restore();
+            } catch (e) {
+                console.error("加载二维码图片失败", e);
+            }
             
             // 保存到本地Storage
             localStorage.setItem('iceberg_diary', JSON.stringify({
@@ -2150,10 +2218,13 @@
         function saveImage() {
             const canvas = document.getElementById('preview-canvas');
             const link = document.createElement('a');
-            link.download = `冰山日记_${new Date().getTime()}.png`;
+            const fileName = `冰山日记_${new Date().getTime()}.png`;
+            link.download = fileName;
             link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
             link.click();
-            showToast('图片已保存');
+            document.body.removeChild(link);
+            showToast('正在保存，若无反应请长按图片保存');
         }
 
         // 分享图片
