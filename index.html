@@ -990,6 +990,206 @@
         .layer-card:nth-child(6) { animation-delay: 0.3s; }
         .layer-card:nth-child(7) { animation-delay: 0.35s; }
         .layer-card:nth-child(8) { animation-delay: 0.4s; }
+
+        /* 扩展服务区（结果页） */
+        .premium-services {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            animation: fadeInUp 0.8s ease backwards;
+        }
+
+        .service-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        /* 咨询师名片 */
+        .counselor-card {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 15px var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .counselor-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .counselor-avatar {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, #7F7FD5, #86A8E7, #91EAE4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(134,168,231,0.3);
+        }
+        .counselor-details {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .counselor-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .counselor-location {
+            font-size: 12px;
+            font-weight: 400;
+            color: #666;
+        }
+        .counselor-title {
+            font-size: 11px;
+            color: #5D5FEF;
+            background: rgba(93,95,239,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            width: max-content;
+            font-weight: 500;
+        }
+        .counselor-org {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+        .counselor-qr {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .qr-placeholder {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 8px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .qr-text {
+            font-size: 10px;
+            color: var(--text-light);
+        }
+
+        /* 会员卡片 */
+        .vip-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+        .vip-invite {
+            background: linear-gradient(90deg, #FFF6DA 0%, #FFEDB3 100%);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #9A6F1C;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        .vip-features {
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+        .vip-features span {
+            display: block;
+            position: relative;
+            padding-left: 20px;
+        }
+        .vip-features span::before {
+            content: '✓';
+            color: #4CAF50;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        .vip-pricing {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .price-item {
+            border: 1.5px solid #F0F0F0;
+            border-radius: 12px;
+            padding: 16px 4px;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .price-item.active {
+            background: #F8F8FF;
+            border-color: #5D5FEF;
+        }
+        .price-item.active::before {
+            content: '推荐';
+            position: absolute;
+            top: -10px;
+            right: -6px;
+            background: #5D5FEF;
+            color: white;
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px 4px 4px 0;
+            font-weight: 500;
+        }
+        .price-item.best::before {
+            content: '最划算';
+            position: absolute;
+            top: -10px;
+            right: -6px;
+            background: #FF9800;
+            color: white;
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px 4px 4px 0;
+            font-weight: 500;
+        }
+        .price-duration {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .price-amount {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .price-amount span {
+            font-size: 12px;
+            font-weight: 400;
+        }
+        .price-desc {
+            font-size: 11px;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -1105,6 +1305,66 @@
         <button class="btn-restart" onclick="restartJourney()">
             重新填写冰山日记
         </button>
+
+        <!-- 扩展服务区 -->
+        <div class="premium-services">
+            <h3 class="service-title">需要专业引导与深入觉察？</h3>
+            
+            <!-- 咨询师名片 -->
+            <div class="counselor-card">
+                <div class="counselor-info">
+                    <div class="counselor-avatar">👩‍💼</div>
+                    <div class="counselor-details">
+                        <div class="counselor-name">冯学云 <span class="counselor-location">- 贵港基地</span></div>
+                        <div class="counselor-title">心理咨询师</div>
+                        <div class="counselor-org">扶苗心理 · 19195861020</div>
+                    </div>
+                </div>
+                <div class="counselor-qr">
+                    <div class="qr-placeholder">
+                        <!-- 简单二维码矢量占位图 -->
+                        <svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm13.5-.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5m-.5 2c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5m2 0c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5m-4 2c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5m2 0c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5m2 0c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5m-2 2c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5m-2-2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5m0-2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5"/></svg>
+                    </div>
+                    <div class="qr-text">扫码添加</div>
+                </div>
+            </div>
+
+            <!-- 会员卡片 -->
+            <div class="vip-card">
+                <div class="vip-invite">
+                    <div style="font-size:24px;">🎁</div>
+                    <div>
+                        <div style="margin-bottom:2px;">邀请三人 免费用</div>
+                        <div style="font-size:11px;font-weight:normal;color:#B38B3A;">邀请3位好友加入会员，免费获得3个月</div>
+                    </div>
+                </div>
+                
+                <div class="vip-features">
+                    <div style="font-weight:600;margin-bottom:8px;font-size:14px;">会员权益</div>
+                    <span>无限日记数量</span>
+                    <span>AI 情绪分析反馈</span>
+                    <span>冰山深度引导对话</span>
+                </div>
+                
+                <div class="vip-pricing">
+                    <div class="price-item">
+                        <div class="price-duration">月度</div>
+                        <div class="price-amount">39<span>元</span></div>
+                        <div class="price-desc">39元/月</div>
+                    </div>
+                    <div class="price-item active">
+                        <div class="price-duration">季度</div>
+                        <div class="price-amount">99<span>元</span></div>
+                        <div class="price-desc"><s style="color:#C4C4C4">原价117元</s></div>
+                    </div>
+                    <div class="price-item best">
+                        <div class="price-duration">年度</div>
+                        <div class="price-amount">199<span>元</span></div>
+                        <div class="price-desc"><s style="color:#C4C4C4">原价468元</s></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast -->
