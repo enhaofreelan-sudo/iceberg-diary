@@ -1434,19 +1434,6 @@
                 }
             },
             {
-                id: 'feelings-about-feelings',
-                icon: '🔄',
-                title: '感受的感受',
-                subtitle: '对自己情绪的二次反应',
-                prompt: '你对自己刚才的感受有什么感受？你接纳自己的情绪吗？还是对自己的情绪感到不安？',
-                placeholder: '例如：我对自己的愤怒感到……',
-                examples: [
-                    '我对自己发脾气感到后悔和自责，觉得自己不应该这样',
-                    '我对自己的害怕感到羞耻，觉得自己不够坚强',
-                    '我对自己的难过感到接纳，允许自己有这样的情绪'
-                ]
-            },
-            {
                 id: 'beliefs',
                 icon: '💡',
                 title: '观点',
@@ -1461,15 +1448,13 @@
             },
             {
                 id: 'expectations',
-                icon: '⭐',
+                icon: '🎯',
                 title: '期待',
-                subtitle: '你期望什么',
-                prompt: '你期待什么？对自己、对他人有什么期待？',
-                placeholder: '例如：我期待……',
-                examples: [
-                    '我期待自己怎么做？',
-                    '我期待对方（或环境）怎么做？',
-                    '我觉得对方期待我怎么做？'
+                subtitle: '三棱镜',
+                subInputs: [
+                    { id: 'expectations-self', label: '⏳ 我期待自己怎么做？', placeholder: '我希望自己能更勇敢地表达，或者……' },
+                    { id: 'expectations-other', label: '👥 我期待对方（或环境）怎么做？', placeholder: '我希望ta能尊重我的发言，看见我的努力……' },
+                    { id: 'expectations-perceived', label: '🔮 我觉得对方期待我怎么做？', placeholder: 'ta期待我顺从/安静/坚强/……' }
                 ]
             },
             {
@@ -1576,8 +1561,19 @@
         function updateProgressIndicator() {
             const dots = document.querySelectorAll('.progress-dot');
             dots.forEach((dot, i) => {
-                const input = document.getElementById(`input-${layers[i].id}`);
-                if (input && input.value.trim()) {
+                const layer = layers[i];
+                let hasValue = false;
+                if (layer.subInputs) {
+                    hasValue = layer.subInputs.some(sub => {
+                        const input = document.getElementById(`input-${sub.id}`);
+                        return input && input.value.trim();
+                    });
+                } else {
+                    const input = document.getElementById(`input-${layer.id}`);
+                    hasValue = input && input.value.trim();
+                }
+                
+                if (hasValue) {
                     dot.classList.add('filled');
                 } else {
                     dot.classList.remove('filled');
@@ -1590,9 +1586,9 @@
             const container = document.getElementById('layers-section');
             container.innerHTML = layers.map((layer, index) => {
                 // 渲染示例列表
-                const examplesHtml = layer.examples.map(ex => 
+                const examplesHtml = layer.examples ? layer.examples.map(ex => 
                     `<li class="example-text">"${ex}"</li>`
-                ).join('');
+                ).join('') : '';
                 
                 // 渲染应对方式提示
                 let copingHintsHtml = '';
@@ -1691,6 +1687,7 @@
                             </div>
                         </div>
                         <div class="layer-content">
+                            ${layer.prompt ? `
                             <div class="layer-prompt">
                                 <div class="prompt-label">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
@@ -1698,6 +1695,7 @@
                                 </div>
                                 <div class="prompt-text">${layer.prompt}</div>
                             </div>
+                            ` : ''}
                             
                             ${copingHintsHtml}
                             
@@ -1705,6 +1703,7 @@
                             
                             ${desireWordsHtml}
                             
+                            ${layer.examples && layer.examples.length > 0 ? `
                             <div class="example-box">
                                 <div class="example-label">
                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="#E8A4B8"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
@@ -1714,11 +1713,26 @@
                                     ${examplesHtml}
                                 </ul>
                             </div>
+                            ` : ''}
                             
+                            ${layer.subInputs ? `
+                                <div class="sub-inputs">
+                                    ${layer.subInputs.map(sub => `
+                                        <div class="sub-input-item" style="margin-bottom: 16px;">
+                                            <div class="sub-input-label" style="font-size: 14px; font-weight: 600; color: #5D4E60; margin-bottom: 8px;">${sub.label}</div>
+                                            <div class="input-area" style="margin-top: 0;">
+                                                <textarea class="textarea-field" id="input-${sub.id}" placeholder="${sub.placeholder}" maxlength="200" oninput="handleInput('${sub.id}', this)">${formData[sub.id] || ''}</textarea>
+                                                <div class="word-count"><span id="count-${sub.id}">${(formData[sub.id] || '').length}</span>/200</div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
                             <div class="input-area">
                                 <textarea class="textarea-field" id="input-${layer.id}" placeholder="${layer.placeholder}" maxlength="200" oninput="handleInput('${layer.id}', this)">${formData[layer.id] || ''}</textarea>
                                 <div class="word-count"><span id="count-${layer.id}">${(formData[layer.id] || '').length}</span>/200</div>
                             </div>
+                            `}
                         </div>
                     </div>
                 `;
@@ -1840,7 +1854,13 @@
 
             // 收集所有层次数据
             layers.forEach(layer => {
-                payload.layers[layer.id] = formData[layer.id] || '';
+                if (layer.subInputs) {
+                    layer.subInputs.forEach(sub => {
+                        payload.layers[sub.id] = formData[sub.id] || '';
+                    });
+                } else {
+                    payload.layers[layer.id] = formData[layer.id] || '';
+                }
             });
 
             try {
@@ -1859,6 +1879,18 @@
                 console.error('网络错误:', error);
                 // 提交失败不影响用户体验，静默处理
             }
+        }
+
+        // 获取层级组合文本
+        function getLayerValue(layer) {
+            if (layer.subInputs) {
+                const parts = layer.subInputs.map(sub => {
+                    const val = formData[sub.id];
+                    return val ? `${sub.label}\n${val}` : '';
+                }).filter(Boolean);
+                return parts.length > 0 ? parts.join('\n\n') : '';
+            }
+            return formData[layer.id] || '';
         }
 
         // 绘制Canvas（2x高分辨率，适配手机屏幕）
@@ -1890,8 +1922,11 @@
             let totalCardsH = 0;
             const layerLines = [];
             layers.forEach((layer) => {
-                const value = formData[layer.id] || '（未填写）';
-                const lines = wrapText(ctx, value, contentMaxWidth);
+                const value = getLayerValue(layer) || '（未填写）';
+                const lines = [];
+                value.split('\n').forEach(para => {
+                    lines.push(...wrapText(ctx, para, contentMaxWidth));
+                });
                 layerLines.push(lines);
                 const textH = Math.max(1, lines.length) * contentLineH;
                 totalCardsH += cardPadding * 2 + 30 * S + textH + cardGap;
@@ -1992,17 +2027,17 @@
             }
             
             // === 层次内容卡片 ===
-            const icons = ['🌊', '🛡️', '💭', '🔄', '💡', '⭐', '💖', '🦋'];
-            const titles = ['行为', '应对方式', '感受', '感受的感受', '观点', '期待', '渴望', '自我'];
+            const icons = ['🌊', '🛡️', '💭', '💡', '🎯', '💖', '🦋'];
+            const titles = ['行为', '应对方式', '感受', '观点', '期待', '渴望', '自我'];
             // 每层左侧色条颜色
-            const barColors = ['#89CFF0', '#8CD4A8', '#E8A878', '#B894D4', '#FFD633', '#FF8A95', '#FF6B6B', '#9D7BE5'];
+            const barColors = ['#89CFF0', '#8CD4A8', '#E8A878', '#FFD633', '#FF8A95', '#FF6B6B', '#9D7BE5'];
             
             let currentY = titleAreaH;
             const cardLeft = 30 * S;
             const cardWidth = width - 60 * S;
             
             layers.forEach((layer, i) => {
-                const value = formData[layer.id] || '（未填写）';
+                const value = getLayerValue(layer) || '（未填写）';
                 const lines = layerLines[i];
                 const textH = Math.max(1, lines.length) * contentLineH;
                 const cardH = cardPadding * 2 + 30 * S + textH;
@@ -2167,13 +2202,25 @@
             document.getElementById('psychology-teacher').value = '';
             document.getElementById('companion-teacher').value = '';
             layers.forEach(layer => {
-                const input = document.getElementById(`input-${layer.id}`);
-                if (input) {
-                    input.value = '';
-                    input.style.height = 'auto';
+                if (layer.subInputs) {
+                    layer.subInputs.forEach(sub => {
+                        const input = document.getElementById(`input-${sub.id}`);
+                        if (input) {
+                            input.value = '';
+                            input.style.height = 'auto';
+                        }
+                        const count = document.getElementById(`count-${sub.id}`);
+                        if (count) count.textContent = '0';
+                    });
+                } else {
+                    const input = document.getElementById(`input-${layer.id}`);
+                    if (input) {
+                        input.value = '';
+                        input.style.height = 'auto';
+                    }
+                    const count = document.getElementById(`count-${layer.id}`);
+                    if (count) count.textContent = '0';
                 }
-                const count = document.getElementById(`count-${layer.id}`);
-                if (count) count.textContent = '0';
             });
             
             updateProgressIndicator();
@@ -2236,7 +2283,6 @@
                 'behavior': '行为（水面之上）',
                 'coping': '应对方式',
                 'feelings': '感受',
-                'feelings-about-feelings': '感受的感受',
                 'beliefs': '观点',
                 'expectations': '期待',
                 'desires': '渴望',
@@ -2257,9 +2303,9 @@
             
             text += '\n───────────────────────────────\n\n';
             
-            const icons = ['🌊', '🛡️', '💭', '🔄', '💡', '⭐', '💖', '🦋'];
+            const icons = ['🌊', '🛡️', '💭', '💡', '🎯', '💖', '🦋'];
             layers.forEach((layer, i) => {
-                const value = formData[layer.id] || '';
+                const value = getLayerValue(layer);
                 const title = layerTitles[layer.id] || layer.title;
                 text += `${icons[i]} 【第${i + 1}层】${title}\n`;
                 text += `${'─'.repeat(20)}\n`;
