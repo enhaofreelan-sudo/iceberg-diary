@@ -12,9 +12,12 @@
 - [x] 个人信息录入（家长姓名、学生姓名、心理老师、陪伴老师）
 - [x] GitHub Pages 部署
 - [x] 前端数据提交逻辑
-- [x] 后端 FastAPI 服务（接收数据 → 飞书多维表格写入）
-- [x] 飞书多维表格字段自动创建（13 列）
-- [x] 腾讯云服务器部署 + 进程守护
+- [x] 后端 FastAPI 服务
+- [x] 从飞书多维表格迁移为本地 SQLite 数据库持久化
+- [x] 引入 JWT 与 bcrypt 鉴权，构建基于角色（家长/老师）的权限体系
+- [x] 老师管理控制台（家长账号管理、密码重置、学生日记汇总查看）
+- [x] 家长多模式自主注册流程（已入校/未入校）
+- [x] 腾讯云服务器部署 + systemd 进程守护
 
 ## 已完成功能
 
@@ -25,26 +28,33 @@
 5. 优化移动端图片保存体验，支持在手机浏览器中长按图片保存到相册
 6. 图片下载、剪贴板复制、文字记录导出
 7. localStorage 本地数据持久化
-8. FastAPI 后端服务 + 飞书多维表格数据回传
+8. FastAPI 后端服务 + 本地 SQLite 数据库
+9. 基于角色的多用户鉴权系统（老师管理后台与家长填写端隔离）
+10. `login.html` 集成家长登录与注册流程（支持已入校与未入校双模式采集）
+11. 老师后台 `teacher.html` 包含日记审查、家长统一管理（录入、展示注册来源及密码重置）
+12. 数据库完成历史冗余空行拦截与有效数据迁移
 
 ## 废弃功能
 
 - Cloudflare Workers 中间层方案（已改为腾讯云服务器直接部署）
-- 企业微信群机器人 Webhook 推送（已改为飞书多维表格 API）
+- 企业微信群机器人 Webhook 推送
+- 飞书多维表格 API 持久化（架构升级，已完整迁移至本地 SQLite 数据库）
 
 ## 技术栈
 
 - 前端：HTML + CSS + JavaScript（单文件应用）
 - 字体：Noto Sans SC（Google Fonts）
-- 后端：Python FastAPI + httpx
-- 数据存储：飞书多维表格 API
+- 后端：Python FastAPI + JWT + bcrypt
+- 数据存储：SQLite (`data/iceberg.db`)
 - 托管：腾讯云服务器 + systemd 进程守护
 
 ## 文件结构
 
 ```
 冰山日记/
-├── index.html              # 主应用（全部前端代码）
+├── index.html              # 家长填写端（主应用）
+├── login.html              # 登录与注册页
+├── teacher.html            # 老师管理控制台
 ├── cover.png               # 封面引导图
 ├── cover.webp              # 封面图 WebP 格式
 ├── favicon.png             # 站点图标
@@ -52,8 +62,10 @@
 ├── .gitignore              # Git 忽略规则
 ├── README.md               # 项目文档
 └── server/                 # 后端服务
-    ├── app.py              # FastAPI 主服务（飞书 API 对接）
-    ├── config.py           # 配置文件（飞书凭证，不上传）
+    ├── app.py              # FastAPI 主服务
+    ├── auth.py             # 认证与加密模块
+    ├── database.py         # SQLite 数据库链接层
+    ├── config.py           # 配置文件（环境变量，不上传）
     ├── config.example.py   # 配置模板
     └── requirements.txt    # Python 依赖
 ```

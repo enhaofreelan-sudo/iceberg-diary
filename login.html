@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>登录 - 冰山日记</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E8A4B8;
+            --primary-dark: #D48A9F;
+            --secondary: #A4B8E8;
+            --background: #FDFBFC;
+            --surface: #FFFFFF;
+            --text-dark: #2D2430;
+            --text-light: #8B7B8E;
+            --error: #FF6B6B;
+            --border: #E0D8E3;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--background);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: var(--text-dark);
+        }
+        .card {
+            background: var(--surface);
+            width: 100%; max-width: 420px;
+            padding: 36px 28px;
+            border-radius: 24px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.05);
+            margin: 16px;
+            position: relative;
+        }
+        .header-icon { font-size: 44px; text-align: center; margin-bottom: 6px; }
+        h1 { text-align: center; font-size: 22px; margin-bottom: 24px; font-weight: 600; }
+
+        /* 主 Tab：登录 / 注册 */
+        .main-tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #EEE; }
+        .main-tab {
+            flex: 1; text-align: center; padding: 10px; cursor: pointer;
+            color: var(--text-light); font-weight: 500; transition: all 0.3s;
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+        }
+        .main-tab.active { color: var(--primary-dark); border-bottom-color: var(--primary-dark); }
+
+        /* 子 Tab：家长 / 老师 */
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 18px; }
+        .sub-tab {
+            flex: 1; text-align: center; padding: 8px; cursor: pointer;
+            border-radius: 8px; font-size: 14px; font-weight: 500;
+            background: #f5f0f5; color: var(--text-light); transition: all 0.2s;
+        }
+        .sub-tab.active { background: var(--primary); color: white; }
+
+        /* 入校状态切换 */
+        .enrollment-tabs { display: flex; gap: 10px; margin-bottom: 18px; }
+        .enrollment-tab {
+            flex: 1; text-align: center; padding: 10px; cursor: pointer;
+            border-radius: 10px; font-size: 14px; font-weight: 500;
+            border: 1.5px solid var(--border); color: var(--text-light); transition: all 0.2s;
+        }
+        .enrollment-tab.active { border-color: var(--primary); color: var(--primary-dark); background: rgba(232,164,184,0.08); }
+
+        /* 表单 */
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #555; }
+        input, select, textarea {
+            width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+            border-radius: 10px; font-size: 14px; transition: all 0.3s; outline: none;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232,164,184,0.15); }
+        textarea { resize: vertical; min-height: 60px; }
+
+        /* 关系选择 */
+        .relation-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .relation-btn {
+            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: white; cursor: pointer; font-size: 13px; transition: all 0.2s;
+        }
+        .relation-btn.active { border-color: var(--primary); background: rgba(232,164,184,0.1); color: var(--primary-dark); }
+        .relation-custom { flex: 1; min-width: 80px; display: none; }
+        .relation-custom.show { display: block; }
+
+        /* 按钮 */
+        .btn {
+            width: 100%; padding: 13px; border: none; border-radius: 12px;
+            color: white; font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+        .btn:active { transform: translateY(2px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .error-msg { color: var(--error); font-size: 13px; margin-top: 8px; text-align: center; min-height: 18px; }
+        .switch-hint { text-align: center; margin-top: 14px; font-size: 13px; color: var(--text-light); }
+        .switch-hint a { color: var(--primary-dark); cursor: pointer; text-decoration: none; font-weight: 500; }
+
+        /* 页面切换 */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* 提示 */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: #333; color: white; padding: 12px 24px; border-radius: 8px;
+            font-size: 14px; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 1000;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .teacher-selects { display: flex; gap: 10px; }
+        .teacher-selects .form-group { flex: 1; }
+
+        .pwd-hint { font-size: 11px; color: #999; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header-icon">❄️</div>
+        <h1>冰山日记</h1>
+
+        <!-- ====== 登录页 ====== -->
+        <div class="page active" id="page-login">
+            <div class="sub-tabs">
+                <div class="sub-tab active" onclick="switchLoginRole('parent')">家长登录</div>
+                <div class="sub-tab" onclick="switchLoginRole('teacher')">老师登录</div>
+            </div>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label id="login-label">手机号</label>
+                    <input type="text" id="login-account" placeholder="请输入手机号" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="login-password" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn" id="login-btn">登录</button>
+                <div class="error-msg" id="login-error"></div>
+            </form>
+
+            <div class="switch-hint">
+                还没有账号？<a onclick="switchPage('register')">立即注册</a>
+            </div>
+        </div>
+
+        <!-- ====== 注册页 ====== -->
+        <div class="page" id="page-register">
+            <!-- 入校状态切换 -->
+            <div class="enrollment-tabs">
+                <div class="enrollment-tab active" onclick="switchEnrollment('enrolled')">🏫 已入校</div>
+                <div class="enrollment-tab" onclick="switchEnrollment('not_enrolled')">📋 未入校</div>
+            </div>
+
+            <form onsubmit="handleRegister(event)">
+                <!-- 通用字段 -->
+                <div class="form-group">
+                    <label>手机号 <span style="color:var(--error)">*</span></label>
+                    <input type="tel" id="reg-phone" placeholder="11位手机号" required maxlength="11">
+                </div>
+                <div class="form-group">
+                    <label>设置密码 <span style="color:var(--error)">*</span></label>
+                    <input type="password" id="reg-password" placeholder="至少6位" required minlength="6">
+                    <div class="pwd-hint">密码用于登录冰山日记</div>
+                </div>
+
+                <!-- ===== 已入校表单 ===== -->
+                <div id="enrolled-fields">
+                    <div class="form-group">
+                        <label>孩子姓名 <span style="color:var(--error)">*</span></label>
+                        <input type="text" id="reg-student-name" placeholder="请输入孩子姓名">
+                    </div>
+                    <div class="form-group">
+                        <label>您是孩子的 <span style="color:var(--error)">*</span></label>
+                        <div class="relation-group">
+                            <div class="relation-btn" onclick="selectRelation(this, '爸爸')">爸爸</div>
+                            <div class="relation-btn" onclick="selectRelation(this, '妈妈')">妈妈</div>
+                            <div class="relation-btn" onclick="selectRelation(this, 'custom')">其他</div>
+                            <input type="text" class="relation-custom" id="reg-relation-custom" placeholder="请输入关系">
+                        </div>
+                    </div>
+                    <div class="teacher-selects">
+                        <div class="form-group">
+                            <label>心理老师</label>
+                            <select id="reg-psy-teacher">
+                                <option value="">选填</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>陪伴老师</label>
+                            <select id="reg-comp-teacher">
+                                <option value="">选填</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== 未入校表单 ===== -->
+                <div id="not-enrolled-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>孩子年龄 <span style="color:var(--error)">*</span></label>
+                        <input type="text" id="reg-child-age" placeholder="例如：12岁">
+                    </div>
+                    <div class="form-group">
+                        <label>孩子的问题</label>
+                        <textarea id="reg-problem" placeholder="请简要描述孩子目前遇到的情况（选填）" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="reg-btn">注册</button>
+                <div class="error-msg" id="reg-error"></div>
+            </form>
+
+            <div class="switch-hint">
+                已有账号？<a onclick="switchPage('login')">返回登录</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ====== 状态 ======
+        let loginRole = 'parent';
+        let enrollmentStatus = 'enrolled';
+        let selectedRelation = '';
+
+        // ====== 页面切换 ======
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${page}`).classList.add('active');
+            // 清空错误
+            document.getElementById('login-error').textContent = '';
+            document.getElementById('reg-error').textContent = '';
+        }
+
+        // ====== 登录角色切换 ======
+        function switchLoginRole(role) {
+            loginRole = role;
+            document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            const label = document.getElementById('login-label');
+            const input = document.getElementById('login-account');
+            if (role === 'parent') {
+                label.textContent = '手机号';
+                input.placeholder = '请输入手机号';
+                input.type = 'tel';
+            } else {
+                label.textContent = '用户名';
+                input.placeholder = '请输入工号或用户名';
+                input.type = 'text';
+            }
+        }
+
+        // ====== 入校状态切换 ======
+        function switchEnrollment(status) {
+            enrollmentStatus = status;
+            document.querySelectorAll('.enrollment-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('enrolled-fields').style.display = status === 'enrolled' ? 'block' : 'none';
+            document.getElementById('not-enrolled-fields').style.display = status === 'not_enrolled' ? 'block' : 'none';
+        }
+
+        // ====== 关系选择 ======
+        function selectRelation(el, value) {
+            document.querySelectorAll('.relation-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            const customInput = document.getElementById('reg-relation-custom');
+            if (value === 'custom') {
+                customInput.classList.add('show');
+                customInput.focus();
+                selectedRelation = '';
+            } else {
+                customInput.classList.remove('show');
+                customInput.value = '';
+                selectedRelation = value;
+            }
+        }
+
+        // ====== 工具函数 ======
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ====== 加载老师列表 ======
+        async function loadTeachers() {
+            try {
+                const res = await fetch('/api/teachers-options');
+                if (!res.ok) return;
+                const teachers = await res.json();
+                const psySelect = document.getElementById('reg-psy-teacher');
+                const compSelect = document.getElementById('reg-comp-teacher');
+                teachers.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.name;
+                    opt.textContent = t.name;
+                    if (t.role_type === 'psychology') psySelect.appendChild(opt.cloneNode(true));
+                    if (t.role_type === 'companion') compSelect.appendChild(opt.cloneNode(true));
+                });
+            } catch (e) {
+                // 静默处理
+            }
+        }
+
+        // ====== 登录 ======
+        async function handleLogin(e) {
+            e.preventDefault();
+            const account = document.getElementById('login-account').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorEl = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+
+            if (!account || !password) { errorEl.textContent = '请填写完整'; return; }
+            if (loginRole === 'parent' && !/^1[3-9]\d{9}$/.test(account)) {
+                errorEl.textContent = '请输入有效的11位手机号'; return;
+            }
+
+            errorEl.textContent = '';
+            btn.disabled = true; btn.textContent = '登录中...';
+
+            try {
+                const params = new URLSearchParams();
+                params.append('username', account);
+                params.append('password', password);
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('role', data.role);
+                    localStorage.setItem('displayName', data.display_name);
+                    showToast('登录成功');
+                    setTimeout(() => {
+                        window.location.href = data.role === 'teacher' ? '/teacher.html' : '/index.html';
+                    }, 800);
+                } else {
+                    errorEl.textContent = data.detail || '账号或密码错误';
+                }
+            } catch (err) {
+                errorEl.textContent = '网络错误，请稍后再试';
+            } finally {
+                btn.disabled = false; btn.textContent = '登录';
+            }
+        }
+
+        // ====== 注册 ======
+        async function handleRegister(e) {
+            e.preventDefault();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const errorEl = document.getElementById('reg-error');
+            const btn = document.getElementById('reg-btn');
+
+            if (!/^1[3-9]\d{9}$/.test(phone)) { errorEl.textContent = '请输入有效的11位手机号'; return; }
+            if (password.length < 6) { errorEl.textContent = '密码至少6位'; return; }
+
+            // 构造请求体
+            const body = {
+                phone: phone,
+                password: password,
+                enrollment_status: enrollmentStatus
+            };
+
+            if (enrollmentStatus === 'enrolled') {
+                const studentName = document.getElementById('reg-student-name').value.trim();
+                const customRel = document.getElementById('reg-relation-custom').value.trim();
+                const relation = selectedRelation || customRel;
+
+                if (!studentName) { errorEl.textContent = '请填写孩子姓名'; return; }
+                if (!relation) { errorEl.textContent = '请选择与孩子的关系'; return; }
+
+                body.student_name = studentName;
+                body.relationship = relation;
+                body.psychology_teacher = document.getElementById('reg-psy-teacher').value;
+                body.companion_teacher = document.getElementById('reg-comp-teacher').value;
+            } else {
+                const childAge = document.getElementById('reg-child-age').value.trim();
+                if (!childAge) { errorEl.textContent = '请填写孩子年龄'; return; }
+                body.child_age = childAge;
+                body.problem_desc = document.getElementById('reg-problem').value.trim();
+            }
+
+            errorEl.textContent = '';
+            btn.disabled = true; btn.textContent = '注册中...';
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('role', data.role);
+                    localStorage.setItem('displayName', data.display_name);
+                    showToast('注册成功');
+                    setTimeout(() => { window.location.href = '/index.html'; }, 800);
+                } else {
+                    errorEl.textContent = data.detail || '注册失败';
+                }
+            } catch (err) {
+                errorEl.textContent = '网络错误，请稍后再试';
+            } finally {
+                btn.disabled = false; btn.textContent = '注册';
+            }
+        }
+
+        // ====== 初始化 ======
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            if (token && role) {
+                window.location.href = role === 'teacher' ? '/teacher.html' : '/index.html';
+            }
+            loadTeachers();
+        }
+    </script>
+</body>
+</html>

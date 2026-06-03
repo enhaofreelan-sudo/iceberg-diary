@@ -12,3 +12,7 @@ FEISHU_TABLE_ID = "tblr02Cyo7iH3rqq"
 
 # 服务端口
 PORT = 8900
+
+# JWT 认证配置
+JWT_SECRET = "your_super_secret_key_change_me_in_production"
+JWT_EXPIRE_DAYS = 30

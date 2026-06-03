@@ -58,7 +58,7 @@
         /* 顶部固定标题区 */
         .header-fixed {
             position: fixed;
-            top: 0;
+            top: 44px;
             left: 0;
             right: 0;
             z-index: 100;
@@ -1025,88 +1025,6 @@
             text-align: center;
         }
 
-        /* 咨询师名片 */
-        .counselor-card {
-            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            border-radius: 16px;
-            padding: 16px 20px;
-            box-shadow: 0 4px 15px var(--shadow);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .counselor-info {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .counselor-avatar {
-            width: 54px;
-            height: 54px;
-            background: linear-gradient(135deg, #7F7FD5, #86A8E7, #91EAE4);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: white;
-            box-shadow: 0 4px 10px rgba(134,168,231,0.3);
-        }
-        .counselor-details {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .counselor-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            display: flex;
-            align-items: baseline;
-            gap: 4px;
-        }
-        .counselor-location {
-            font-size: 12px;
-            font-weight: 400;
-            color: #666;
-        }
-        .counselor-title {
-            font-size: 11px;
-            color: #5D5FEF;
-            background: rgba(93,95,239,0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-            width: max-content;
-            font-weight: 500;
-        }
-        .counselor-org {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-top: 2px;
-        }
-        .counselor-qr {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-        .qr-placeholder {
-            width: 48px;
-            height: 48px;
-            background: white;
-            border-radius: 8px;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #333;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .qr-text {
-            font-size: 10px;
-            color: var(--text-light);
-        }
 
         /* 会员卡片 */
         .vip-card {
@@ -1208,9 +1126,28 @@
             font-size: 11px;
             color: #999;
         }
+        /* 顶部栏 */
+        .user-topbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 44px;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); z-index: 200;
+        }
+        .user-info-display { font-size: 14px; font-weight: 500; color: #333; display: flex; align-items: center; gap: 6px; }
+        .btn-topbar { background: none; border: none; color: #8B7B8E; font-size: 13px; cursor: pointer; padding: 4px 8px; }
     </style>
 </head>
 <body>
+    <!-- 顶部用户信息栏 -->
+    <div class="user-topbar" id="user-topbar">
+        <div class="user-info-display">
+            <span>👤</span><span id="user-display-name">家长</span>
+        </div>
+        <div>
+            <button class="btn-topbar" onclick="handleLogout()">退出登录</button>
+        </div>
+    </div>
+
     <!-- 装饰元素 -->
     <div class="deco-circle c1"></div>
     <div class="deco-circle c2"></div>
@@ -1261,11 +1198,15 @@
                         </div>
                         <div class="info-field">
                             <label class="info-label">心理老师</label>
-                            <input type="text" class="info-input" id="psychology-teacher" placeholder="选填">
+                            <select class="info-input" id="psychology-teacher">
+                                <option value="">请选择心理老师(选填)</option>
+                            </select>
                         </div>
                         <div class="info-field">
                             <label class="info-label">陪伴老师</label>
-                            <input type="text" class="info-input" id="companion-teacher" placeholder="选填">
+                            <select class="info-input" id="companion-teacher">
+                                <option value="">请选择陪伴老师(选填)</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1279,17 +1220,17 @@
                 <!-- 动态生成 -->
             </section>
         </main>
-    </div>
 
-    <!-- 底部固定操作区 -->
-    <footer class="footer-fixed">
-        <div class="footer-content">
-            <button class="btn-generate" onclick="generateImage()">
-                <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                生成冰山日记
-            </button>
-        </div>
-    </footer>
+        <!-- 底部固定操作区 -->
+        <footer class="footer-fixed">
+            <div class="footer-content">
+                <button class="btn-generate" onclick="generateImage()">
+                    <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    生成冰山日记
+                </button>
+            </div>
+        </footer>
+    </div>
 
     <!-- 结果页面 -->
     <div class="result-page" id="result-page">
@@ -1330,8 +1271,7 @@
         <div class="premium-services">
             <h3 class="service-title">需要专业引导与深入觉察？</h3>
             
-            <!-- 咨询师名片 (图片版本) -->
-            <img src="counselor.png" alt="心理咨询师" style="width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display: block;">
+            <!-- 咨询师名片 -->
 
             <!-- 会员卡片 -->
             <div class="vip-card">
@@ -1374,9 +1314,7 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // ===== 后端 API 配置 =====
-        // 部署在同一服务器上使用相对路径，无需跨域
-        const WORKER_API_URL = '/api/submit';
+
 
         // 冰山层次数据 - 增强版
         const layers = [
@@ -1527,9 +1465,33 @@
             companionTeacher: ''
         };
         let expandedLayers = new Set([0]); // 默认展开第一个
+        let isGenerating = false; // 图片生成与提交锁定标志
+
+
+        // 退出登录
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('displayName');
+            window.location.href = '/login.html';
+        }
+
+        // 历史记录
+        function viewHistory() {
+            window.location.href = '/history.html'; // 预留
+        }
 
         // 初始化页面
-        function initPage() {
+        async function initPage() {
+            // 检查登录态
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            if (!token || role !== 'parent') {
+                window.location.href = '/login.html';
+                return;
+            }
+            document.getElementById('user-display-name').textContent = localStorage.getItem('displayName') || '家长';
+
             // 设置日期
             const now = new Date();
             const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${weekday[now.getDay()]}`;
@@ -1540,6 +1502,25 @@
             
             // 渲染层次卡片
             renderLayers();
+
+            // 拉取老师列表
+            try {
+                const res = await fetch('/api/teachers-options');
+                if (res.ok) {
+                    const teachers = await res.json();
+                    const psySelect = document.getElementById('psychology-teacher');
+                    const compSelect = document.getElementById('companion-teacher');
+                    teachers.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.name;
+                        opt.textContent = t.name;
+                        if (t.role_type === 'psychology') psySelect.appendChild(opt.cloneNode(true));
+                        if (t.role_type === 'companion') compSelect.appendChild(opt.cloneNode(true));
+                    });
+                }
+            } catch (err) {
+                console.error("无法加载老师列表", err);
+            }
             
             // 自动聚焦第一个输入框
             setTimeout(() => {
@@ -1819,42 +1800,79 @@
 
         // 生成图片
         async function generateImage() {
-            document.getElementById('form-container').style.display = 'none';
-            document.querySelector('.header-fixed').style.display = 'none';
-            document.querySelector('.footer-fixed').style.display = 'none';
-            document.getElementById('result-page').classList.add('active');
-            
-            // 保存用户信息
-            userInfo.parentName = document.getElementById('parent-name').value.trim();
-            userInfo.studentName = document.getElementById('student-name').value.trim();
-            userInfo.psychologyTeacher = document.getElementById('psychology-teacher').value.trim();
-            userInfo.companionTeacher = document.getElementById('companion-teacher').value.trim();
-            
-            // 异步提交数据到企业微信表格（不阻塞图片生成）
-            submitToServer();
-            
-            // 绘制图片
-            await drawCanvas();
-            
-            // 处理手机端长按保存
-            const canvas = document.getElementById('preview-canvas');
-            const img = document.getElementById('preview-img');
-            const tip = document.getElementById('save-tip');
-            
-            img.src = canvas.toDataURL('image/png');
-            canvas.style.display = 'none';
-            img.style.display = 'block';
-            
-            // 简单判断是否为移动设备
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                tip.style.display = 'block';
+            if (isGenerating) return;
+
+            // 校验必填项：家长姓名与学生姓名必填
+            const parentName = document.getElementById('parent-name').value.trim();
+            const studentName = document.getElementById('student-name').value.trim();
+            if (!parentName || !studentName) {
+                showToast('请填写家长姓名和学生姓名');
+                return;
             }
-            
-            window.scrollTo(0, 0);
+
+            isGenerating = true;
+
+            // 优化提交按钮状态，防止重复误触
+            const btn = document.querySelector('.btn-generate');
+            let originalBtnHtml = '';
+            if (btn) {
+                originalBtnHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.innerHTML = '正在生成日记...';
+            }
+
+            try {
+                document.getElementById('form-container').style.display = 'none';
+                document.querySelector('.header-fixed').style.display = 'none';
+                document.querySelector('.footer-fixed').style.display = 'none';
+                document.getElementById('user-topbar').style.display = 'none';
+                document.getElementById('result-page').classList.add('active');
+                
+                // 保存用户信息
+                userInfo.parentName = parentName;
+                userInfo.studentName = studentName;
+                userInfo.psychologyTeacher = document.getElementById('psychology-teacher').value.trim();
+                userInfo.companionTeacher = document.getElementById('companion-teacher').value.trim();
+                
+                // 绘制图片
+                await drawCanvas();
+                
+                // 获取图片Blob并异步提交
+                const canvas = document.getElementById('preview-canvas');
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.8));
+                submitToServer(blob);
+                
+                // 处理手机端长按保存
+                const img = document.getElementById('preview-img');
+                const tip = document.getElementById('save-tip');
+                
+                img.src = canvas.toDataURL('image/png');
+                canvas.style.display = 'none';
+                img.style.display = 'block';
+                
+                // 简单判断是否为移动设备
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    tip.style.display = 'block';
+                }
+                
+                window.scrollTo(0, 0);
+            } catch (err) {
+                console.error("生成冰山日记失败", err);
+                showToast("生成失败，请重试");
+            } finally {
+                isGenerating = false;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.innerHTML = originalBtnHtml;
+                }
+            }
         }
 
-        // 提交数据到 Cloudflare Worker -> 企业微信智能表格
-        async function submitToServer() {
+        // 提交数据到 FastAPI 后端 -> SQLite 存储及图片保存
+        // 提交数据到 FastAPI 后端 -> SQLite 存储及图片保存
+        async function submitToServer(imageBlob) {
             const now = new Date();
             const submitTime = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
@@ -1881,20 +1899,31 @@
             });
 
             try {
-                const resp = await fetch(WORKER_API_URL, {
+                const formDataParams = new FormData();
+                formDataParams.append('data', JSON.stringify(payload));
+                if (imageBlob) {
+                    formDataParams.append('image', imageBlob, 'iceberg.png');
+                }
+
+                const token = localStorage.getItem('token');
+                const resp = await fetch('/api/diary/submit', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: { 
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: formDataParams
                 });
                 const result = await resp.json();
                 if (result.success) {
                     showToast('日记已同步到记录表');
                 } else {
                     console.error('提交失败:', result.message);
+                    if (resp.status === 401) {
+                        handleLogout();
+                    }
                 }
             } catch (error) {
                 console.error('网络错误:', error);
-                // 提交失败不影响用户体验，静默处理
             }
         }
 
@@ -2142,29 +2171,7 @@
             ctx.font = `${13 * S}px "Noto Sans SC", sans-serif`;
             ctx.fillText('萨提亚冰山理论 · 心理觉察日记', qrCardX + 30 * S, footerY + 110 * S);
             
-            // 绘制二维码图片
-            try {
-                const qrImg = await new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.crossOrigin = 'Anonymous';
-                    img.onload = () => resolve(img);
-                    img.onerror = reject;
-                    img.src = 'counselor.png';
-                });
-                
-                const qrSize = 110 * S;
-                const qrX = qrCardX + qrCardW - qrSize - 20 * S;
-                const qrY = footerY + 20 * S;
-                
-                ctx.save();
-                ctx.beginPath();
-                roundRect(ctx, qrX, qrY, qrSize, qrSize, 8 * S);
-                ctx.clip();
-                ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-                ctx.restore();
-            } catch (e) {
-                console.error("加载二维码图片失败", e);
-            }
+            // 二维码图片暂未配置，跳过绘制
             
             // 保存到本地Storage
             localStorage.setItem('iceberg_diary', JSON.stringify({
@@ -2249,6 +2256,7 @@
             document.getElementById('form-container').style.display = 'block';
             document.querySelector('.header-fixed').style.display = 'block';
             document.querySelector('.footer-fixed').style.display = 'block';
+            document.getElementById('user-topbar').style.display = 'flex';
             document.getElementById('result-page').classList.remove('active');
             
             // 清空所有输入
