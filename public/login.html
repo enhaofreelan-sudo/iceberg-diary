@@ -201,7 +201,7 @@
                 <div id="not-enrolled-fields" style="display:none;">
                     <div class="form-group">
                         <label>孩子年龄 <span style="color:var(--error)">*</span></label>
-                        <input type="text" id="reg-child-age" placeholder="例如：12岁">
+                        <input type="number" id="reg-child-age" placeholder="例如：12" inputmode="numeric" pattern="[0-9]*" min="1" max="30">
                     </div>
                     <div class="form-group">
                         <label>孩子的问题</label>
@@ -384,6 +384,7 @@
             } else {
                 const childAge = document.getElementById('reg-child-age').value.trim();
                 if (!childAge) { errorEl.textContent = '请填写孩子年龄'; return; }
+                if (!/^\d+$/.test(childAge)) { errorEl.textContent = '年龄请输入阿拉伯数字'; return; }
                 body.child_age = childAge;
                 body.problem_desc = document.getElementById('reg-problem').value.trim();
             }

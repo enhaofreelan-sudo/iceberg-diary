@@ -106,6 +106,7 @@ async def send_to_feishu_bitable(data: dict) -> dict:
     
     # 这里的键名必须与飞书多维表格中设置的列名完全一致
     fields = {
+        "用户ID": data.get("phone", ""),
         "提交时间": data.get("submitTime", ""),
         "家长姓名": user_info.get("parentName", ""),
         "学生姓名": user_info.get("studentName", ""),
@@ -200,6 +201,8 @@ async def register_parent(data: ParentRegister):
     if data.enrollment_status == "not_enrolled":
         if not data.child_age or not data.child_age.strip():
             raise HTTPException(status_code=400, detail="请填写孩子年龄")
+        if not data.child_age.strip().isdigit():
+            raise HTTPException(status_code=400, detail="年龄请输入阿拉伯数字")
 
     # 手机号去重
     with get_db() as db:
@@ -260,8 +263,15 @@ async def submit_diary(
         has_student = bool(user_info.get("studentName", "").strip())
         has_layers = any(bool(val.strip()) for val in layers.values() if isinstance(val, str))
 
-        # 若名字与所有填写的冰山层均为空，则拦截该空提交
-        if not (has_parent or has_student) and not has_layers:
+        # 若姓名缺失，则拦截提交
+        if not (has_parent or has_student):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "家长姓名与学生姓名不能为空"}
+            )
+
+        # 若所有填写的冰山内容层均为空，则拦截提交
+        if not has_layers:
             return JSONResponse(
                 status_code=400,
                 content={"success": False, "message": "提交数据内容为空，已被系统拦截"}
@@ -295,6 +305,8 @@ async def submit_diary(
             ))
 
         # 发送到飞书多维表格（失败不阻塞主流程）
+        # 将当前用户手机号注入 payload，供飞书表格写入“用户ID”列
+        payload["phone"] = current_user.get("phone", "")
         try:
             await send_to_feishu_bitable(payload)
         except Exception as e:
@@ -322,6 +334,17 @@ async def health_check():
     return {"status": "ok", "service": "冰山日记后端"}
 
 
+# ===================== 开发者中控台接口 =====================
+
+@app.get("/api/dev/pages")
+async def list_dev_pages():
+    """扫描 public 目录下所有 HTML 页面（开发者中控台专用）"""
+    import glob
+    html_files = glob.glob(os.path.join(os.path.dirname(__file__), "../public/*.html"))
+    pages = [os.path.basename(f) for f in html_files if os.path.basename(f) != "dashboard.html"]
+    return {"pages": sorted(pages)}
+
+
 # ===================== 老师端接口 =====================
 
 @app.get("/api/teacher/diaries")
@@ -333,6 +356,42 @@ async def get_teacher_diaries(current_user: dict = Depends(get_current_user)):
     with get_db() as db:
         cursor = db.execute("SELECT d.*, u.phone FROM diaries d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id DESC")
         return [dict(row) for row in cursor.fetchall()]
+
+@app.get("/api/teacher/diaries/grouped")
+async def get_teacher_diaries_grouped(current_user: dict = Depends(get_current_user)):
+    """按家长分组返回日记数据"""
+    if current_user["role"] != "teacher":
+        raise HTTPException(status_code=403, detail="无权访问")
+
+    with get_db() as db:
+        cursor = db.execute("SELECT d.*, u.phone FROM diaries d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id DESC")
+        all_diaries = [dict(row) for row in cursor.fetchall()]
+
+    # 按 parent_name + student_name 分组
+    from collections import OrderedDict
+    groups = OrderedDict()
+    for d in all_diaries:
+        pn = (d.get("parent_name") or "").strip()
+        sn = (d.get("student_name") or "").strip()
+        if not pn and not sn:
+            key = "__unknown__"
+        else:
+            key = f"{pn}/{sn}"
+
+        if key not in groups:
+            groups[key] = {
+                "group_key": key,
+                "parent_name": pn or "未知家长",
+                "student_name": sn or "",
+                "count": 0,
+                "diaries": []
+            }
+        groups[key]["count"] += 1
+        groups[key]["diaries"].append(d)
+
+    # 按日记数量降序
+    result = sorted(groups.values(), key=lambda g: g["count"], reverse=True)
+    return result
 
 @app.get("/api/teacher/parents")
 async def get_parents_list(current_user: dict = Depends(get_current_user)):
@@ -396,8 +455,8 @@ async def reset_parent_password(user_id: int, current_user: dict = Depends(get_c
 # ===================== 静态文件 & 启动 =====================
 
 # 挂载静态文件（前端页面），放在路由定义之后
-# 将 index.html、cover.png 等放在上级目录
-app.mount("/", StaticFiles(directory="..", html=True), name="static")
+# 将 index.html、cover.png 等放在 public 目录
+app.mount("/", StaticFiles(directory="../public", html=True), name="static")
 
 
 if __name__ == "__main__":

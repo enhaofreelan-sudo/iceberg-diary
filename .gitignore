@@ -25,3 +25,5 @@ server/venv/
 server/test_api.py
 server/test_playwright.py
 server/data/
+.env
+server/.env
