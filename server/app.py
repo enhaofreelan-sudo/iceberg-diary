@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import time
-from config import FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_TABLE_ID, PORT
+from config import FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_TABLE_ID, PORT, TEACHER_INVITE_CODE
 from database import get_db, get_teachers_options
 from auth import verify_password, create_access_token, decode_token
 
@@ -162,21 +162,71 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
 class ParentRegister(BaseModel):
     phone: str
     password: str
+    invite_code: str
     enrollment_status: str       # enrolled / not_enrolled
     # 已入校字段
     student_name: Optional[str] = ""
     relationship: Optional[str] = ""
-    psychology_teacher: Optional[str] = ""
-    companion_teacher: Optional[str] = ""
+    teacher_id: Optional[int] = None
     # 未入校字段
     child_age: Optional[str] = ""
     problem_desc: Optional[str] = ""
+
+class TeacherRegister(BaseModel):
+    phone: str
+    password: str
+    real_name: str
+    invite_code: str
+
+@app.post("/api/auth/register_teacher")
+async def register_teacher(data: TeacherRegister):
+    """老师自助注册接口"""
+    import re
+    from auth import hash_password
+
+    if data.invite_code != TEACHER_INVITE_CODE:
+        raise HTTPException(status_code=400, detail="邀请码错误，无法注册老师账号")
+
+    if not re.match(r'^1[3-9]\d{9}$', data.phone):
+        raise HTTPException(status_code=400, detail="请输入有效的11位手机号")
+
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="密码至少6位")
+
+    if not data.real_name or not data.real_name.strip():
+        raise HTTPException(status_code=400, detail="请写真实姓名")
+
+    with get_db() as db:
+        cursor = db.execute("SELECT id FROM users WHERE phone = ?", (data.phone,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="该手机号已注册，请直接登录")
+
+        pw_hash = hash_password(data.password)
+        db.execute("""
+            INSERT INTO users (phone, username, password_hash, role, display_name)
+            VALUES (?, ?, ?, 'teacher', ?)
+        """, (data.phone, data.phone, pw_hash, data.real_name.strip()))
+        
+        cursor = db.execute("SELECT id, role, display_name FROM users WHERE phone = ?", (data.phone,))
+        user = cursor.fetchone()
+
+    access_token = create_access_token(data={"sub": str(user["id"]), "role": user["role"]})
+    return {
+        "success": True,
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": user["role"],
+        "display_name": user["display_name"]
+    }
 
 @app.post("/api/auth/register")
 async def register_parent(data: ParentRegister):
     """家长自助注册接口"""
     import re
     from auth import hash_password
+
+    if data.invite_code != TEACHER_INVITE_CODE:
+        raise HTTPException(status_code=400, detail="机构邀请码错误，无法注册")
 
     # 手机号格式校验
     if not re.match(r'^1[3-9]\d{9}$', data.phone):
@@ -220,12 +270,12 @@ async def register_parent(data: ParentRegister):
         db.execute("""
             INSERT INTO users (phone, username, password_hash, role, display_name, 
                              student_name, enrollment_status, relationship,
-                             child_age, problem_desc)
-            VALUES (?, ?, ?, 'parent', ?, ?, ?, ?, ?, ?)
+                             child_age, problem_desc, teacher_id)
+            VALUES (?, ?, ?, 'parent', ?, ?, ?, ?, ?, ?, ?)
         """, (
             data.phone, data.phone, pw_hash, display_name,
             data.student_name or "", data.enrollment_status, data.relationship or "",
-            data.child_age or "", data.problem_desc or ""
+            data.child_age or "", data.problem_desc or "", data.teacher_id
         ))
 
     # 注册成功后自动签发 token
@@ -354,7 +404,7 @@ async def get_teacher_diaries(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="无权访问")
         
     with get_db() as db:
-        cursor = db.execute("SELECT d.*, u.phone FROM diaries d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id DESC")
+        cursor = db.execute("SELECT d.*, u.phone FROM diaries d LEFT JOIN users u ON d.user_id = u.id WHERE u.teacher_id = ? ORDER BY d.id DESC", (current_user["id"],))
         return [dict(row) for row in cursor.fetchall()]
 
 @app.get("/api/teacher/diaries/grouped")
@@ -364,7 +414,7 @@ async def get_teacher_diaries_grouped(current_user: dict = Depends(get_current_u
         raise HTTPException(status_code=403, detail="无权访问")
 
     with get_db() as db:
-        cursor = db.execute("SELECT d.*, u.phone FROM diaries d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id DESC")
+        cursor = db.execute("SELECT d.*, u.phone FROM diaries d LEFT JOIN users u ON d.user_id = u.id WHERE u.teacher_id = ? ORDER BY d.id DESC", (current_user["id"],))
         all_diaries = [dict(row) for row in cursor.fetchall()]
 
     # 按 parent_name + student_name 分组
@@ -403,8 +453,8 @@ async def get_parents_list(current_user: dict = Depends(get_current_user)):
         cursor = db.execute("""
             SELECT id, phone, display_name, parent_name, student_name, 
                    enrollment_status, relationship, child_age, problem_desc, created_at 
-            FROM users WHERE role = 'parent' ORDER BY id DESC
-        """)
+            FROM users WHERE role = 'parent' AND teacher_id = ? ORDER BY id DESC
+        """, (current_user["id"],))
         return [dict(row) for row in cursor.fetchall()]
 
 class ParentCreate(BaseModel):
@@ -429,8 +479,8 @@ async def create_parent(data: ParentCreate, current_user: dict = Depends(get_cur
             raise HTTPException(status_code=400, detail="该手机号已存在")
             
         db.execute(
-            "INSERT INTO users (phone, username, password_hash, role, display_name) VALUES (?, ?, ?, ?, ?)",
-            (data.phone, data.phone, default_pw, "parent", data.display_name)
+            "INSERT INTO users (phone, username, password_hash, role, display_name, teacher_id) VALUES (?, ?, ?, ?, ?, ?)",
+            (data.phone, data.phone, default_pw, "parent", data.display_name, current_user["id"])
         )
     return {"success": True, "message": "添加成功"}
 
